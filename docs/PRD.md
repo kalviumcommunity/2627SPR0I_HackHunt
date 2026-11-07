@@ -23,11 +23,93 @@ Students hear about hackathons only after the last date is over. The details are
 
 ### 1.3 Why a better solution is needed
 
-One board that shows the official link, who can apply, the last date and the date it was last checked. Students see everything in one place and in time. The data is saved, so it is a trusted source and not just another chat.
+Right now, finding a hackathon depends on luck. A student has to be in the right group at the right time, and has to trust a forwarded message that may be old or wrong. Our Opportunity Board fixes this by putting all current opportunities in one place, checked by a coordinator, with tools to find the right one quickly.
+
+**How the board solves each problem from 1.1 and 1.2**
+
+| Problem today | How the Opportunity Board solves it | How students benefit |
+|---|---|---|
+| Details are spread over many chat groups, so students miss them. | **One central board.** The coordinator adds every opportunity in one place. Students open one website instead of searching many chats. | Students do not need to be in every group. Nobody misses an opportunity just because they did not see a message. |
+| Messages get buried under new messages. | **A saved list sorted by nearest deadline.** Listings stay on the board until the deadline passes, and the ones closing first are shown first. Cards show "Closing soon" when 7 days or less remain. | Students can see what is urgent at a glance and apply before the last date. |
+| Students cannot filter by what they are eligible for. | **Search and filters** by mode (online or offline), type and deadline. Each card also shows the eligibility notes. | Students quickly find opportunities that fit them and do not waste time on events they cannot join. |
+| Links may not be official, so students cannot trust them. | **Official links only.** The coordinator must add the official link for every listing, and the button opens the real registration page. | Students apply on the genuine site and avoid fake or wrong links. |
+| No one knows if the details are still correct. | **Last-checked date and warning tags.** Every listing shows when it was last verified. If it was not checked for more than 7 days, it shows a "Stale" tag. The coordinator can click "Re-checked" after verifying. | Students know how fresh the information is and can double-check the official site if a listing is stale. |
+| Expired events keep circulating in chats. | **Automatic hiding of expired listings.** Listings whose deadline has passed are not shown by default. | Students only see opportunities they can still apply for, so their time is not wasted. |
+| Data and details are lost or forgotten. | **Saved records.** All listings are stored in a database and stay safe after the app restarts. | The board is a reliable source that students can check again and again. |
+
+**Overall benefit for students**
+
+- **Save time:** one page, quick filters and search, instead of scrolling through chat history.
+- **Do not miss deadlines:** the nearest deadlines come first, with "Closing soon" warnings.
+- **Find relevant opportunities:** eligibility notes and filters show what suits them.
+- **Trust the information:** official links and last-checked dates show the details are real and recent.
+- **Fair access:** every student gets the same information at the same time, whether or not they are in a particular group.
+
+The coordinator also benefits. They add each opportunity once and no longer need to post the same message again and again or answer repeated questions about dates and eligibility.
 
 ---
 
 ## 2. Users and Stakeholders
+
+### 2.1 Target users: students
+
+The main users are **college students** who want to join hackathons, coding contests and similar opportunities.
+
+- **Who:** students from all departments and all years (1st year to final year) of our college.
+- **Why all years:** first-year students can start early. Final-year students can find opportunities before they graduate.
+- **What they need:** a quick way to see current opportunities, check if they are eligible, and reach the official registration page before the deadline.
+- **Technical skill:** no special skill is needed. They only need a phone or laptop with internet.
+- **Login:** students do not need an account. The board is open to read for everyone.
+
+### 2.2 Coordinator and verifier
+
+- **Who the coordinator is:** one nominated person who manages the board. This can be a staff member of the innovation cell or a trusted student leader of a club. The faculty advisor will confirm the name.
+- **Who verifies the details:** the coordinator is also the verifier. Before adding a listing, the coordinator checks the details on the official website of the organizer. If the coordinator is busy, a second person nominated by the advisor can act as a backup.
+- **How verification works:**
+  - Check that the link is the official one.
+  - Check the last date and the eligibility rules on the official page.
+  - Enter the details on the board and set the last-checked date.
+  - Click "Re-checked" after checking again, so the date stays fresh.
+- **Login:** only the coordinator (and the backup) will have a login to add, edit, archive or delete listings.
+
+### 2.3 Faculty / club advisors
+
+Faculty or club advisors do not use the board every day. They review and approve the solution.
+
+- **What they review:**
+  - This PRD, to confirm that the problem and the plan are right.
+  - The working website during the final demo.
+  - The rules for the board: only official links, and listings must be re-checked within 7 days.
+- **What they approve:**
+  - That the project can go live for students.
+  - Who the coordinator (and backup) will be.
+  - What kinds of opportunities can be listed.
+- **After launch:** they can check now and then that the board is up to date.
+
+### 2.4 College / innovation cell
+
+The college and the innovation cell do not use the platform directly, but they benefit from it.
+
+- **More participation:** when more students hear about opportunities in time, more of them take part in hackathons and contests.
+- **Better results:** more participation can lead to more projects, wins and recognition for the college.
+- **One official channel:** the innovation cell gets one trusted place to share opportunities, instead of many scattered messages.
+- **Less manual work:** the cell does not need to repeat announcements or answer the same questions again and again.
+- **Useful record:** the board shows which opportunities were shared and when.
+
+### 2.5 Development team
+
+Issac, Sera and Joshua build and deploy the website in this sprint. They are not users after the project is handed over, but they are responsible for making sure it works. Their roles are listed in section 7.1.
+
+### 2.6 Summary of roles and responsibilities
+
+| Who | Role | Responsibility | What they gain |
+|---|---|---|---|
+| Students | Main users | View, search and filter listings. Open the official link and apply before the deadline. | Find relevant opportunities on time and stop missing deadlines. |
+| Coordinator | Admin user | Add listings from official sources, verify details, update the last-checked date, edit, archive or delete old listings. | Saves time. No more posting the same message again and again. |
+| Backup coordinator | Admin user (backup) | Do the coordinator's work when the coordinator is not available. | The board stays up to date at all times. |
+| Faculty / club advisors | Approvers | Review the PRD and the final demo, approve the project, and confirm who the coordinator is. | Confidence that the information is accurate and official. |
+| College / innovation cell | Beneficiary | Support the board and share it with students. | Higher student participation and one trusted channel. |
+| Issac, Sera, Joshua | Development team | Build, test and deploy the website. | A working project delivered in this sprint. |
 
 | Who | Role | What they do or gain |
 |---|---|---|

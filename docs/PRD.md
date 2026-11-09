@@ -132,12 +132,77 @@ Issac, Sera and Joshua build and deploy the website in this sprint. They are not
 
 ### 3.2 How we will measure success
 
-- **Complete listings:** every listing has a link, eligibility, last date and last-checked date. Target: 100%.
-- **Expired listings:** none shown by default. Target: 0.
-- **Data after restart:** all records are still there. Target: 100%.
-- **Student search time:** a student finds a listing in under 30 seconds.
-- **Coordinator entry time:** the coordinator adds a listing in under 2 minutes.
-- **Tests and start-up:** automatic tests pass and the app starts with one command.
+Each measure below has a **target** and a clear way to **verify** it.
+
+#### 1. Complete listings (100%)
+
+- **Target:** every listing has an official link, eligibility notes, last date and last-checked date.
+- **How we verify:**
+  - The database requires all four fields, so a listing cannot be saved without them.
+  - The API checks the input. It must reject a listing if a field is empty, if the link is not a valid `http` or `https` URL, or if the last-checked date is in the future.
+  - An automated API test (Jest and Supertest) sends listings with a missing field and checks that each one is rejected.
+  - Before the demo, we run a database query that counts listings with an empty mandatory field. The count must be 0.
+
+#### 2. Expired listings are hidden (0 shown)
+
+- **Target:** no expired listing appears on the student page by default.
+- **How we verify:**
+  - A unit test checks the date rule. A listing with yesterday's date is not current. A listing with today's date or a later date is current.
+  - An API test adds listings with a past date and a future date, calls the public list endpoint, and checks that the past one is not returned.
+  - A manual check on the student page: add a listing with a past date and confirm it does not show.
+
+#### 3. Data stays after restart or redeploy (100%)
+
+- **Target:** all records are still there after the app restarts or is deployed again.
+- **How we verify:**
+  - **Restart test on our computers:** add 5 test listings and note the count. Run `docker compose down` and then `docker compose up`. The count and the content must be the same. We repeat this after rebuilding the images with `docker compose up --build`.
+  - **Redeploy test on Render:** add a listing on the live site, deploy a new version, and check that the listing is still there. This works because the data is stored in MongoDB, not inside the app container.
+  - The result of both tests is written in the test log with the date.
+
+#### 4. Student finds a listing in under 30 seconds
+
+- **Target:** a student finds a suitable listing in under 30 seconds.
+- **How we verify:**
+  - We run a simple usability test with 3 to 5 students who have not seen the website before.
+  - Each student gets one task, for example: "Find an online hackathon that closes within 30 days and open its official link."
+  - We time each student with a stopwatch from opening the page to clicking the official link.
+  - The target is met if the average time is under 30 seconds and no student takes more than 60 seconds.
+  - We note any step where students got stuck and fix it.
+
+#### 5. Coordinator adds a listing in under 2 minutes
+
+- **Target:** the coordinator adds a complete listing in under 2 minutes.
+- **How we verify:**
+  - The coordinator (or a team member playing that role) logs in and adds 3 different listings from real official pages, using a stopwatch.
+  - Time starts when the "Add listing" form opens and ends when the listing shows on the student page.
+  - The target is met if each listing takes under 2 minutes, and the average is under 2 minutes.
+  - If the form is slow or confusing, we improve it, for example with clearer labels and a date picker.
+
+#### 6. Automatic tests pass and the app starts with one command
+
+- **Target:** the automatic tests pass in GitHub Actions and the whole app starts with `docker compose up`.
+- **How we verify:**
+  - GitHub Actions runs on every push and pull request. A change can only be merged and deployed if every check is green.
+  - **These automated checks must pass before deployment:**
+    1. **Lint check:** the code has no style or syntax errors.
+    2. **Date rule tests:** current, "Closing soon" (7 days or less) and "Stale" (not checked for over 7 days) are calculated correctly.
+    3. **Input validation tests:** listings with a missing field, a wrong link or a future last-checked date are rejected.
+    4. **API tests:** the public list and filter endpoints work, login works, and add, edit and delete work only after login.
+    5. **Access test:** add, edit and delete return an "unauthorized" error when the user is not logged in.
+    6. **Docker build check:** the Docker image builds without errors.
+    7. **Health check:** after the app starts, the `/health` endpoint responds with OK.
+  - **One-command start:** a team member who did not write the Docker setup clones the repository on a clean computer, copies `.env.example` to `.env`, and runs `docker compose up`. The site must open and show the sample listings.
+
+#### Summary
+
+| Measure | Target | Verified by |
+|---|---|---|
+| Complete listings | 100% | Database and API checks, automated tests, database count query |
+| Expired listings hidden | 0 shown | Unit test, API test, manual check |
+| Data after restart or redeploy | 100% kept | Docker restart test, Render redeploy test |
+| Student search time | Under 30 seconds | Timed test with 3 to 5 students |
+| Coordinator entry time | Under 2 minutes | Timed test with 3 real listings |
+| Tests and start-up | All checks green, one command | GitHub Actions, clean-computer run |
 
 ---
 

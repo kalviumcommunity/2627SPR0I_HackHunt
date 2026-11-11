@@ -1,3 +1,21 @@
+
+# HackHunt – Find the Right Hackathon Before the Deadline
+
+## Getting Started
+
+HackHunt is a centralized platform that helps students discover hackathons and student opportunities before their deadlines.
+
+Project setup and execution instructions are currently being documented.
+
+## Assigned Incident
+
+This repository setup and documentation task is tracked under:
+
+[Issue #5 – Initial Team Workflow Setup](https://github.com/kalviumcommunity/2627SPR0I_HackHunt/issues/5)
+
+
+
+
 # HackHunt
 ### Find the right hackathon before the deadline.
 

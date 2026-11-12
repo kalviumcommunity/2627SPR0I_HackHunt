@@ -18,10 +18,22 @@ const opportunitySchema = new mongoose.Schema(
       enum: ['hackathon', 'contest', 'fellowship', 'other'],
     },
     mode: { type: String, required: true, enum: ['online', 'offline', 'hybrid'] },
-    eligibilityNotes: { type: String, required: true },
+    eligibilityNotes: { type: String, required: true, trim: true },
     deadline: { type: Date, required: true },
-    lastChecked: { type: Date, required: true },
-    status: { type: String, required: true, enum: ['active', 'archived'], default: 'active' },
+    lastChecked: {
+      type: Date,
+      required: true,
+      validate: {
+        validator: (date) => date <= new Date(),
+        message: 'lastChecked cannot be in the future'
+      }
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: ['active', 'archived'],
+      default: 'active'
+    }
   },
   { timestamps: true }
 );

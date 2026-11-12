@@ -4,6 +4,11 @@ function startOfToday(now = new Date()) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
+function isCurrent(opportunity, now = new Date()) {
+  return opportunity.status === 'active'
+    && startOfToday(new Date(opportunity.deadline)) >= startOfToday(now);
+}
+
 function getDaysLeft(deadline, now = new Date()) {
   const deadlineDay = startOfToday(new Date(deadline));
   const today = startOfToday(now);
@@ -16,10 +21,7 @@ function isClosingSoon(deadline, now = new Date()) {
 }
 
 function isStale(lastChecked, now = new Date()) {
-  const daysSinceChecked = Math.floor(
-    (startOfToday(now).getTime() - startOfToday(new Date(lastChecked)).getTime()) / DAY_IN_MS
-  );
-  return daysSinceChecked > 7;
+  return now.getTime() - new Date(lastChecked).getTime() > 7 * DAY_IN_MS;
 }
 
-module.exports = { startOfToday, getDaysLeft, isClosingSoon, isStale };
+module.exports = { startOfToday, isCurrent, getDaysLeft, isClosingSoon, isStale };

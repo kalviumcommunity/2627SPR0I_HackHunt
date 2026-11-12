@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const mongoose = require('mongoose');
 const Opportunity = require('./models/Opportunity');
 const { startOfToday } = require('./utils/dates');
@@ -107,9 +109,9 @@ function buildSeedOpportunities(now = new Date()) {
 }
 
 async function seed(now = new Date()) {
-  const mongoUri = process.env.MONGODB_URI;
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!mongoUri) {
-    throw new Error('MONGODB_URI must be set');
+    throw new Error('MONGODB_URI or MONGO_URI must be set');
   }
 
   await mongoose.connect(mongoUri);

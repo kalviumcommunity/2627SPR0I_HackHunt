@@ -4,6 +4,9 @@ const opportunityRoutes = require('./routes/opportunities');
 const app = express();
 
 app.use(express.json());
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 app.use('/api/opportunities', opportunityRoutes);
 
 app.use((req, res) => {

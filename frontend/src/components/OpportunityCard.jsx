@@ -1,19 +1,6 @@
-function formatDate(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Date unavailable';
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
+import { formatDate } from '../utils/opportunityDates.js';
 
-function formatLabel(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-export default function OpportunityCard({ opportunity }) {
+function OpportunityCard({ opportunity }) {
   const {
     title,
     organizer,
@@ -31,36 +18,48 @@ export default function OpportunityCard({ opportunity }) {
   return (
     <article className="opportunity-card">
       <div className="card-topline">
-        <span className="type-label">{formatLabel(type)}</span>
-        <span className="mode-label">{formatLabel(mode)}</span>
-      </div>
-      <h3>{title}</h3>
-      <p className="organizer">by {organizer}</p>
-      <p className="eligibility">{eligibilityNotes}</p>
-
-      <div className="deadline-row">
-        <div>
-          <span className="detail-label">Deadline</span>
-          <strong>{formatDate(deadline)}</strong>
+        <div className="category-tags">
+          <span className="tag">{type}</span>
+          <span className="tag">{mode}</span>
         </div>
-        <span className="days-left">
-          {daysLeft === 0 ? 'Today' : `${daysLeft} days left`}
-        </span>
-      </div>
-
-      {(isClosingSoon || isStale) && (
-        <div className="badges" aria-label="Opportunity status">
+        <div className="status-badges" aria-label="Opportunity status">
           {isClosingSoon && <span className="badge badge-closing">Closing soon</span>}
           {isStale && <span className="badge badge-stale">Details may be stale</span>}
         </div>
-      )}
-
-      <div className="card-bottom">
-        <span className="checked-date">Checked {formatDate(lastChecked)}</span>
-        <a href={officialUrl} target="_blank" rel="noreferrer">
-          View opportunity <span aria-hidden="true">↗</span>
-        </a>
       </div>
+
+      <div className="card-heading">
+        <h2>{title}</h2>
+        <p className="organizer">by {organizer}</p>
+      </div>
+
+      <p className="eligibility">{eligibilityNotes}</p>
+
+      <dl className="card-details">
+        <div>
+          <dt>Deadline</dt>
+          <dd>{formatDate(deadline)}</dd>
+        </div>
+        <div>
+          <dt>Days left</dt>
+          <dd>{daysLeft === 0 ? 'Today' : `${daysLeft} days`}</dd>
+        </div>
+        <div>
+          <dt>Last checked</dt>
+          <dd>{formatDate(lastChecked)}</dd>
+        </div>
+      </dl>
+
+      <a
+        className="official-link"
+        href={officialUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Official link <span aria-hidden="true">↗</span>
+      </a>
     </article>
   );
 }
+
+export default OpportunityCard;

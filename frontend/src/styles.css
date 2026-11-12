@@ -1,0 +1,306 @@
+:root {
+  font-family: 'Segoe UI', sans-serif;
+  color: #17241f;
+  background: #f5f7f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.site-header {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e3e9e3;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Manrope, sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #226b4f;
+  color: #fff;
+  font-size: 17px;
+}
+
+.header-note,
+.site-footer {
+  color: #718078;
+  font-size: 13px;
+}
+
+.intro {
+  max-width: 670px;
+  padding: 78px 0 72px;
+}
+
+.eyebrow {
+  margin: 0 0 13px;
+  color: #32805e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  margin-bottom: 16px;
+  font-size: clamp(38px, 6vw, 61px);
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.intro-copy {
+  max-width: 520px;
+  margin: 0;
+  color: #69766f;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.listings {
+  padding-bottom: 68px;
+}
+
+.listings-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.listings-heading .eyebrow {
+  margin-bottom: 7px;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 25px;
+  letter-spacing: -0.04em;
+}
+
+.result-count {
+  padding-bottom: 4px;
+  color: #718078;
+  font-size: 13px;
+}
+
+.opportunity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.opportunity-card {
+  display: flex;
+  min-height: 290px;
+  flex-direction: column;
+  padding: 23px;
+  border: 1px solid #e5eae5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(34 62 47 / 3%);
+}
+
+.card-topline,
+.deadline-row,
+.card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-topline {
+  justify-content: flex-start;
+  margin-bottom: 17px;
+}
+
+.type-label,
+.mode-label {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #edf5ef;
+  color: #32674d;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mode-label {
+  background: #f2f3f1;
+  color: #657069;
+}
+
+h3 {
+  margin-bottom: 3px;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+}
+
+.organizer {
+  margin-bottom: 13px;
+  color: #7a867f;
+  font-size: 13px;
+}
+
+.eligibility {
+  min-height: 40px;
+  margin-bottom: 19px;
+  color: #59665f;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.deadline-row {
+  align-items: end;
+  padding-top: 13px;
+  border-top: 1px solid #edf0ed;
+}
+
+.deadline-row > div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-label,
+.checked-date {
+  color: #849088;
+  font-size: 11px;
+}
+
+.deadline-row strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.days-left {
+  color: #53645a;
+  font-size: 12px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge-closing {
+  background: #fff2dd;
+  color: #99621c;
+}
+
+.badge-stale {
+  background: #fcebea;
+  color: #a34a43;
+}
+
+.card-bottom {
+  margin-top: auto;
+  padding-top: 15px;
+}
+
+.card-bottom a {
+  color: #226b4f;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card-bottom a:hover {
+  text-decoration: underline;
+}
+
+.state-message {
+  padding: 30px 24px;
+  border: 1px dashed #d5ded6;
+  border-radius: 12px;
+  color: #65736b;
+  text-align: center;
+}
+
+.error-message {
+  border-color: #e8c7c4;
+  color: #a34039;
+}
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 0 30px;
+  border-top: 1px solid #e3e9e3;
+}
+
+@media (max-width: 700px) {
+  .page-shell {
+    width: min(100% - 32px, 560px);
+  }
+
+  .intro {
+    padding: 58px 0 54px;
+  }
+
+  .opportunity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

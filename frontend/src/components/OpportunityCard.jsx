@@ -1,33 +1,44 @@
-import { daysUntil, formatDate, isStale } from '../utils/opportunityDates.js'
+import { formatDate } from '../utils/opportunityDates.js';
 
 function OpportunityCard({ opportunity }) {
-  const daysLeft = daysUntil(opportunity.deadline)
-  const closingSoon = daysLeft >= 0 && daysLeft <= 7
+  const {
+    title,
+    organizer,
+    officialUrl,
+    type,
+    mode,
+    eligibilityNotes,
+    deadline,
+    lastChecked,
+    isClosingSoon,
+    isStale,
+    daysLeft,
+  } = opportunity;
 
   return (
     <article className="opportunity-card">
       <div className="card-topline">
         <div className="category-tags">
-          <span className="tag">{opportunity.type}</span>
-          <span className="tag">{opportunity.mode}</span>
+          <span className="tag">{type}</span>
+          <span className="tag">{mode}</span>
         </div>
         <div className="status-badges" aria-label="Opportunity status">
-          {closingSoon && <span className="badge badge-closing">Closing soon</span>}
-          {isStale(opportunity.lastChecked) && <span className="badge badge-stale">Stale</span>}
+          {isClosingSoon && <span className="badge badge-closing">Closing soon</span>}
+          {isStale && <span className="badge badge-stale">Details may be stale</span>}
         </div>
       </div>
 
       <div className="card-heading">
-        <h2>{opportunity.title}</h2>
-        <p className="organizer">{opportunity.organizer}</p>
+        <h2>{title}</h2>
+        <p className="organizer">by {organizer}</p>
       </div>
 
-      <p className="eligibility">{opportunity.eligibilityNotes}</p>
+      <p className="eligibility">{eligibilityNotes}</p>
 
       <dl className="card-details">
         <div>
           <dt>Deadline</dt>
-          <dd>{formatDate(opportunity.deadline)}</dd>
+          <dd>{formatDate(deadline)}</dd>
         </div>
         <div>
           <dt>Days left</dt>
@@ -35,20 +46,20 @@ function OpportunityCard({ opportunity }) {
         </div>
         <div>
           <dt>Last checked</dt>
-          <dd>{formatDate(opportunity.lastChecked)}</dd>
+          <dd>{formatDate(lastChecked)}</dd>
         </div>
       </dl>
 
       <a
         className="official-link"
-        href={opportunity.officialUrl}
+        href={officialUrl}
         target="_blank"
         rel="noopener noreferrer"
       >
         Official link <span aria-hidden="true">↗</span>
       </a>
     </article>
-  )
+  );
 }
 
-export default OpportunityCard
+export default OpportunityCard;

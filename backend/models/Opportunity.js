@@ -7,17 +7,17 @@ const opportunitySchema = new mongoose.Schema(
     officialUrl: {
       type: String,
       required: true,
-      trim: true,
-      match: /^https?:\/\//i
+      validate: {
+        validator: (value) => /^https?:\/\/\S+$/i.test(value),
+        message: 'officialUrl must use HTTP or HTTPS',
+      },
     },
     type: {
       type: String,
-      enum: ['hackathon', 'contest', 'fellowship', 'other']
+      required: true,
+      enum: ['hackathon', 'contest', 'fellowship', 'other'],
     },
-    mode: {
-      type: String,
-      enum: ['online', 'offline', 'hybrid']
-    },
+    mode: { type: String, required: true, enum: ['online', 'offline', 'hybrid'] },
     eligibilityNotes: { type: String, required: true, trim: true },
     deadline: { type: Date, required: true },
     lastChecked: {
@@ -30,6 +30,7 @@ const opportunitySchema = new mongoose.Schema(
     },
     status: {
       type: String,
+      required: true,
       enum: ['active', 'archived'],
       default: 'active'
     }
@@ -37,4 +38,5 @@ const opportunitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Opportunity', opportunitySchema);
+module.exports = mongoose.models.Opportunity
+  || mongoose.model('Opportunity', opportunitySchema);

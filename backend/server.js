@@ -1,24 +1,18 @@
 require('dotenv').config();
 
-const express = require('express');
 const mongoose = require('mongoose');
-
-const app = express();
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+const app = require('./app');
 
 async function start() {
-  if (!process.env.MONGO_URI) {
-    throw new Error('MONGO_URI must be set');
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI or MONGO_URI must be set');
   }
 
-  await mongoose.connect(process.env.MONGO_URI);
-
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`HackHunt backend listening on port ${port}`);
+  await mongoose.connect(mongoUri);
+  const port = process.env.PORT || 5000;
+  return app.listen(port, () => {
+    console.log(`HackHunt API listening on port ${port}`);
   });
 }
 

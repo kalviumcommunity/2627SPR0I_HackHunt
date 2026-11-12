@@ -1,7 +1,7 @@
-import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom'
-import CoordinatorLoginPage from './pages/CoordinatorLoginPage.jsx'
-import StudentPage from './pages/StudentPage.jsx'
-import './App.css'
+import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom';
+import CoordinatorLoginPage from './pages/CoordinatorLoginPage.jsx';
+import StudentPage from './pages/StudentPage.jsx';
+import './App.css';
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
         <footer className="site-footer">Curated opportunities for what you build next.</footer>
       </div>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

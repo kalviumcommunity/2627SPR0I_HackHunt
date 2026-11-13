@@ -128,6 +128,65 @@ main {
   font-weight: 650;
 }
 
+.listing-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(125px, 1fr)) minmax(190px, 1.5fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.filter-field {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.listing-controls select,
+.listing-controls input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 11px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.listing-controls select:focus,
+.listing-controls input:focus {
+  outline: 2px solid #d5d0f4;
+  border-color: var(--accent);
+}
+
+.clear-filters {
+  min-height: 42px;
+  padding: 0 13px;
+  color: var(--accent);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clear-filters:hover {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.sort-note {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .opportunity-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -344,9 +403,14 @@ main {
   cursor: pointer;
 }
 
-.login-notice {
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.login-error {
   margin: 14px 0 0;
-  color: #8a5700;
+  color: #a83333;
   font-size: 13px;
 }
 
@@ -356,6 +420,19 @@ main {
 }
 
 @media (max-width: 900px) {
+  .listing-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search-field,
+  .clear-filters {
+    grid-column: span 2;
+  }
+
+  .clear-filters {
+    justify-self: start;
+  }
+
   .opportunity-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -394,6 +471,19 @@ main {
   .opportunity-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .listing-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .search-field,
+  .clear-filters {
+    grid-column: auto;
+  }
+
+  .clear-filters {
+    justify-self: stretch;
   }
 
   .listing-section {

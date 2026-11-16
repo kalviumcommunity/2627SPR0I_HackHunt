@@ -1,6 +1,7 @@
 const express = require('express');
 const Opportunity = require('../models/Opportunity');
 const { requireCoordinator } = require('../middleware/auth');
+const { startOfToday } = require('../utils/dates');
 
 const router = express.Router();
 const validStatuses = ['active', 'archived'];
@@ -37,6 +38,28 @@ router.post('/', async (req, res, next) => {
     await opportunity.validate();
     await opportunity.save();
     return res.status(201).json(opportunity);
+  } catch (error) {
+    if (error.name === 'ValidationError' || error.name === 'CastError') {
+      return res.status(400).json({ error: { message: error.message } });
+    }
+    return next(error);
+  }
+});
+
+router.put('/:id/recheck', async (req, res, next) => {
+  if (!/^[a-f\d]{24}$/i.test(req.params.id)) {
+    return res.status(400).json({ error: { message: 'Invalid opportunity id' } });
+  }
+
+  try {
+    const opportunity = await Opportunity.findById(req.params.id);
+    if (!opportunity) {
+      return res.status(404).json({ error: { message: 'Opportunity not found' } });
+    }
+    opportunity.lastChecked = startOfToday();
+    await opportunity.validate();
+    await opportunity.save();
+    return res.json(opportunity);
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {
       return res.status(400).json({ error: { message: error.message } });

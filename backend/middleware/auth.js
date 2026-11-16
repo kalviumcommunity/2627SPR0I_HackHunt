@@ -9,7 +9,7 @@ function requireCoordinator(req, res, next) {
   }
 
   try {
-    jwt.verify(token, process.env.COORDINATOR_JWT_SECRET);
+    jwt.verify(token, process.env.COORDINATOR_JWT_SECRET, { algorithms: ['HS256'] });
     return next();
   } catch {
     return res.status(401).json({ error: { message: 'Authentication required' } });

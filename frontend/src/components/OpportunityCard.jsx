@@ -22,7 +22,7 @@ function OpportunityCard({ opportunity }) {
           <span className="tag">{type}</span>
           <span className="tag">{mode}</span>
         </div>
-        <div className="status-badges" aria-label="Opportunity status">
+        <div className="status-badges" role="group" aria-label={`${title} status`}>
           {isClosingSoon && <span className="badge badge-closing">Closing soon</span>}
           {isStale && <span className="badge badge-stale">Details may be stale</span>}
         </div>
@@ -42,7 +42,7 @@ function OpportunityCard({ opportunity }) {
         </div>
         <div>
           <dt>Days left</dt>
-          <dd>{daysLeft === 0 ? 'Today' : `${daysLeft} days`}</dd>
+          <dd>{daysLeft === 0 ? 'Today' : `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}</dd>
         </div>
         <div>
           <dt>Last checked</dt>
@@ -55,6 +55,7 @@ function OpportunityCard({ opportunity }) {
         href={officialUrl}
         target="_blank"
         rel="noopener noreferrer"
+        aria-label={`Official link for ${title}`}
       >
         Official link <span aria-hidden="true">↗</span>
       </a>

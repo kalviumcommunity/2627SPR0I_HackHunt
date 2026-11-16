@@ -5,12 +5,14 @@ const rateLimit = require('express-rate-limit');
 const { COOKIE_NAME } = require('../middleware/auth');
 
 const router = express.Router();
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: 'strict',
-  secure: process.env.NODE_ENV === 'production',
-  path: '/',
-};
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  };
+}
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -25,8 +27,21 @@ router.post('/login', loginLimiter, async (req, res, next) => {
     return res.status(500).json({ error: { message: 'Coordinator authentication is not configured' } });
   }
 
-  const { username, password } = req.body || {};
-  if (typeof username !== 'string' || typeof password !== 'string') {
+  const credentials = req.body;
+  if (!credentials
+    || typeof credentials !== 'object'
+    || Array.isArray(credentials)
+    || Object.keys(credentials).some((key) => !['username', 'password'].includes(key))) {
+    return res.status(400).json({ error: { message: 'Username and password are required' } });
+  }
+
+  const { username, password } = credentials;
+  if (typeof username !== 'string'
+    || username.length === 0
+    || username.length > 128
+    || typeof password !== 'string'
+    || password.length === 0
+    || password.length > 1024) {
     return res.status(400).json({ error: { message: 'Username and password are required' } });
   }
 
@@ -41,7 +56,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
       COORDINATOR_JWT_SECRET,
       { expiresIn: '8h' }
     );
-    res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 8 * 60 * 60 * 1000 });
+    res.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: 8 * 60 * 60 * 1000 });
     return res.json({ message: 'Logged in' });
   } catch (error) {
     return next(error);
@@ -49,7 +64,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME, cookieOptions);
+  res.clearCookie(COOKIE_NAME, cookieOptions());
   return res.json({ message: 'Logged out' });
 });
 

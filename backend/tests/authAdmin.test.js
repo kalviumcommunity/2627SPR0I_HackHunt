@@ -1,5 +1,6 @@
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Opportunity = require('../models/Opportunity');
 const app = require('../app');
 const { startOfToday } = require('../utils/dates');
@@ -39,7 +40,42 @@ describe('coordinator authentication and admin opportunities API', () => {
     expect(logout.headers['set-cookie'][0]).toMatch(/coordinatorToken=;/);
   });
 
+  test('marks the authentication cookie secure in production', async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    try {
+      const login = await request(app)
+        .post('/api/login')
+        .send({ username: 'coordinator', password: 'test-password' });
+
+      expect(login.status).toBe(200);
+      expect(login.headers['set-cookie'][0]).toMatch(/; Secure/i);
+    } finally {
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+    }
+  });
+
   test('rejects invalid credentials and protects admin routes from missing or invalid cookies', async () => {
+    const invalidShape = await request(app)
+      .post('/api/login')
+      .send([{ username: 'coordinator', password: 'test-password' }]);
+    expect(invalidShape.status).toBe(400);
+
+    const unknownField = await request(app)
+      .post('/api/login')
+      .send({ username: 'coordinator', password: 'test-password', role: 'admin' });
+    expect(unknownField.status).toBe(400);
+
+    const oversizedPassword = await request(app)
+      .post('/api/login')
+      .send({ username: 'coordinator', password: 'x'.repeat(1025) });
+    expect(oversizedPassword.status).toBe(400);
+
     const badLogin = await request(app)
       .post('/api/login')
       .send({ username: 'coordinator', password: 'wrong-password' });
@@ -70,6 +106,16 @@ describe('coordinator authentication and admin opportunities API', () => {
       .get('/api/admin/opportunities')
       .set('Cookie', 'coordinatorToken=invalid');
     expect(invalidCookie.status).toBe(401);
+
+    const wrongAlgorithm = jwt.sign(
+      { username: 'coordinator' },
+      process.env.COORDINATOR_JWT_SECRET,
+      { algorithm: 'HS384' }
+    );
+    const rejectedAlgorithm = await request(app)
+      .get('/api/admin/opportunities')
+      .set('Cookie', `coordinatorToken=${wrongAlgorithm}`);
+    expect(rejectedAlgorithm.status).toBe(401);
   });
 
   test('admin listing includes non-current records and applies the optional status filter', async () => {
@@ -118,6 +164,13 @@ describe('coordinator authentication and admin opportunities API', () => {
     const invalid = await agent.post('/api/admin/opportunities')
       .send({ ...valid, officialUrl: 'javascript:alert(1)' });
     expect(invalid.status).toBe(400);
+    expect(invalid.body.error.message).toBe('Invalid opportunity data');
+    expect(JSON.stringify(invalid.body)).not.toMatch(/ValidationError|stack/i);
+
+    const unexpectedField = await agent.post('/api/admin/opportunities')
+      .send({ ...valid, createdAt: '2020-01-01' });
+    expect(unexpectedField.status).toBe(400);
+    expect(unexpectedField.body.error.message).toMatch(/unsupported fields/);
 
     const missingField = await agent.post('/api/admin/opportunities')
       .send({

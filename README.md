@@ -3,9 +3,7 @@
 
 ## Getting Started
 
-HackHunt is a centralized platform that helps students discover hackathons and student opportunities before their deadlines.
-
-Project setup and execution instructions are currently being documented.
+HackHunt is a centralized platform that helps students discover hackathons and student opportunities before their deadlines. See [How to run](#how-to-run) for setup instructions.
 
 ## Assigned Incident
 
@@ -67,72 +65,74 @@ The platform does not require automated scraping or personalized AI recommendati
 - Automate testing and builds using GitHub Actions.
 - Deploy the application using Render.
 
-## 5. Setup, Run and Test Instructions
+## How to run
 
 ### Prerequisites
-- Git
-- Docker Desktop with Docker Compose
-- Node.js and npm (for local development without Docker)
-- MongoDB Atlas or another configured MongoDB instance, if required by the application setup
+- Node.js and npm
+- A MongoDB Atlas connection string
 
-### Clone the Repository
+### Configure the backend
 
-```bash
-git clone https://github.com/KalviumCommunity/<REPOSITORY_NAME>.git
-cd <REPOSITORY_NAME>
-```
-
-Replace `<REPOSITORY_NAME>` with the actual repository name.
-
-### Configure Environment Variables
-
-Create the required environment configuration using `.env.example` as a reference. Set the database connection, authentication secrets, and any other variables required by the application.
-
-Never commit real credentials or secrets.
-
-### Run with Docker Compose
+From the repository root, enter the backend folder and create the environment file:
 
 ```bash
-docker compose up --build
+cd backend
 ```
 
-Open the frontend URL and port configured in the project.
+On Windows PowerShell:
 
-To stop the application:
+```powershell
+Copy-Item .env.example .env
+```
+
+On macOS/Linux:
 
 ```bash
-docker compose down
+cp .env.example .env
 ```
 
-Do not remove persistent database volumes when stopping the application if you need to retain local database records.
+Edit the copied `.env` file and set `MONGODB_URI` to your MongoDB Atlas connection string. Set a coordinator username and a long random `COORDINATOR_JWT_SECRET`.
 
-### Run Tests
+Create a password hash and copy the printed value into `COORDINATOR_PASSWORD_HASH` in `.env`:
 
-Run the automated tests using the scripts configured in the frontend and backend `package.json` files.
+```bash
+npm run hash-password -- "your-coordinator-password"
+```
 
-Verify that:
-- Search, filters, and deadline sorting work correctly.
-- Expired listings are hidden by default.
-- Required fields are validated.
-- Coordinator authentication prevents unauthorized modifications.
-- Adding, editing, deleting, and archiving listings work correctly.
-- Data remains available after restarting the application.
-- Docker builds successfully.
-- GitHub Actions tests and builds pass.
+Install backend dependencies and seed the database:
 
-Replace these instructions with the exact test commands configured in the repository.
+```bash
+npm install
+npm run seed
+```
 
-## 6. Environment Variables
+Start the backend from the `backend` folder:
 
-The following table must be completed using the actual environment variables used by the application.
+```bash
+npm run dev
+```
 
-| Variable Name | Purpose |
-|---|---|
-| `<DATABASE_URI_VARIABLE>` | MongoDB connection string |
-| `<AUTH_SECRET_VARIABLE>` | Authentication or session security, if applicable |
-| `<OTHER_VARIABLES>` | Other required application configuration |
+### Start the frontend
 
-Refer to `.env.example` for the complete list of required variable names. Do not commit passwords, API keys, database credentials, or other secrets.
+In a second terminal, from the repository root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite. Its development proxy forwards `/api` requests to the backend.
+
+### Run the backend tests
+
+From the `backend` folder:
+
+```bash
+npm test
+```
+
+Do not commit `.env` or other files containing credentials.
 
 ## 7. Demo Link
 

@@ -8,10 +8,11 @@
   -moz-osx-font-smoothing: grayscale;
 
   --ink: #242238;
-  --muted: #777487;
+  --muted: #6d6a79;
   --accent: #6254c8;
   --accent-hover: #5144b2;
   --border: #e9e7f0;
+  --control-border: #908c9c;
   --surface: #f2f0f8;
 }
 
@@ -30,8 +31,7 @@ input {
   font: inherit;
 }
 
-a:focus-visible,
-button:focus-visible {
-  outline: 3px solid #b5aef0;
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }

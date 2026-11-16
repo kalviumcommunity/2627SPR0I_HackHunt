@@ -5,9 +5,24 @@ const { startOfToday } = require('../utils/dates');
 
 const router = express.Router();
 const validStatuses = ['active', 'archived'];
+const opportunityFields = new Set([
+  'title',
+  'organizer',
+  'officialUrl',
+  'type',
+  'mode',
+  'eligibilityNotes',
+  'deadline',
+  'lastChecked',
+  'status',
+]);
 
 function hasObjectBody(body) {
   return body !== null && typeof body === 'object' && !Array.isArray(body);
+}
+
+function hasOnlyOpportunityFields(body) {
+  return Object.keys(body).every((key) => opportunityFields.has(key));
 }
 
 router.use(requireCoordinator);
@@ -32,6 +47,9 @@ router.post('/', async (req, res, next) => {
   if (!hasObjectBody(req.body)) {
     return res.status(400).json({ error: { message: 'Opportunity data must be an object' } });
   }
+  if (!hasOnlyOpportunityFields(req.body)) {
+    return res.status(400).json({ error: { message: 'Opportunity data contains unsupported fields' } });
+  }
 
   try {
     const opportunity = new Opportunity(req.body);
@@ -40,7 +58,7 @@ router.post('/', async (req, res, next) => {
     return res.status(201).json(opportunity);
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).json({ error: { message: error.message } });
+      return res.status(400).json({ error: { message: 'Invalid opportunity data' } });
     }
     return next(error);
   }
@@ -62,7 +80,7 @@ router.put('/:id/recheck', async (req, res, next) => {
     return res.json(opportunity);
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).json({ error: { message: error.message } });
+      return res.status(400).json({ error: { message: 'Invalid opportunity data' } });
     }
     return next(error);
   }
@@ -74,6 +92,9 @@ router.put('/:id', async (req, res, next) => {
   }
   if (!hasObjectBody(req.body)) {
     return res.status(400).json({ error: { message: 'Opportunity data must be an object' } });
+  }
+  if (!hasOnlyOpportunityFields(req.body)) {
+    return res.status(400).json({ error: { message: 'Opportunity data contains unsupported fields' } });
   }
 
   try {

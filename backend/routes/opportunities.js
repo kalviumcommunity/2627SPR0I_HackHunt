@@ -25,8 +25,9 @@ function validateQuery(query) {
     && (typeof query.window !== 'string' || !['7', '30'].includes(query.window))) {
     return 'window must be 7 or 30';
   }
-  if (query.q !== undefined && typeof query.q !== 'string') {
-    return 'q must be a single string';
+  if (query.q !== undefined
+    && (typeof query.q !== 'string' || query.q.length > 100)) {
+    return 'q must be a string of 100 characters or fewer';
   }
   return null;
 }
@@ -61,8 +62,9 @@ router.get('/', async (req, res, next) => {
   if (req.query.window) {
     filter.deadline.$lte = new Date(today.getTime() + Number(req.query.window) * 24 * 60 * 60 * 1000);
   }
-  if (req.query.q) {
-    const search = new RegExp(escapeRegex(req.query.q.trim()), 'i');
+  const searchTerm = req.query.q && req.query.q.trim();
+  if (searchTerm) {
+    const search = new RegExp(escapeRegex(searchTerm), 'i');
     filter.$or = [
       { title: search },
       { organizer: search },

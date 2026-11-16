@@ -85,6 +85,15 @@ describe('public opportunities API', () => {
     expect(response.body.error.message).toBeTruthy();
   });
 
+  test('rejects oversized search terms', async () => {
+    const response = await request(app)
+      .get('/api/opportunities')
+      .query({ q: 'x'.repeat(101) });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.message).toMatch(/100 characters/);
+  });
+
   test('rejects malformed ids and returns a current listing by id', async () => {
     const invalid = await request(app).get('/api/opportunities/not-an-id');
     expect(invalid.status).toBe(400);

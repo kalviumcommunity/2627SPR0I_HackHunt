@@ -127,6 +127,7 @@ function StudentPage() {
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
+              maxLength={100}
               placeholder="Title, organizer, or eligibility"
             />
           </label>

@@ -61,7 +61,7 @@ The platform does not require automated scraping or personalized AI recommendati
 ### Data and DevOps
 - Store opportunity records persistently in MongoDB.
 - Preserve records after application restarts.
-- Run the application using Docker Compose.
+- Build and run the backend as a Docker image (see "Run with Docker" below).
 - Automate testing and builds using GitHub Actions.
 - Deploy the application using Render.
 
@@ -154,3 +154,24 @@ The project board tracks development tasks, team responsibilities, testing, depl
 
 HackHunt focuses on manually curated hackathon opportunities. Automated scraping, personalized AI recommendations, student accounts, email or SMS alerts, in-app registration, and a separate mobile application are outside the scope of this sprint.
 
+
+## Run with Docker
+
+Build the image:
+
+    docker build -t hackhunt-backend ./backend
+
+Start MongoDB on a Docker network:
+
+    docker network create hackhunt-net
+    docker run -d --name mongo --network hackhunt-net mongo:7
+
+Run the backend on the same network:
+
+    docker run --rm --network hackhunt-net -p 5000:5000 -e PORT=5000 -e MONGODB_URI="mongodb://mongo:27017/hackhunt" hackhunt-backend
+
+Check it:
+
+    curl http://localhost:5000/health
+
+To use MongoDB Atlas instead, set `MONGODB_URI` to your Atlas connection string and skip the network and MongoDB steps.

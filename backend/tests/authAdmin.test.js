@@ -1,6 +1,23 @@
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+jest.mock('../db/recheckStore', () => {
+  class PersistenceError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = 'PersistenceError';
+    }
+  }
+
+  return {
+    PersistenceError,
+    recordOpportunityRecheck: jest.fn(async (_id, _lastChecked, saveOpportunity) => {
+      await saveOpportunity();
+    }),
+  };
+});
+
+const { PersistenceError, recordOpportunityRecheck } = require('../db/recheckStore');
 const Opportunity = require('../models/Opportunity');
 const app = require('../app');
 const { startOfToday } = require('../utils/dates');
@@ -225,7 +242,42 @@ describe('coordinator authentication and admin opportunities API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.lastChecked).toBe(startOfToday().toISOString());
+    expect(recordOpportunityRecheck).toHaveBeenCalledWith(
+      record._id.toString(),
+      startOfToday(),
+      expect.any(Function)
+    );
     const updated = await Opportunity.findById(record._id);
     expect(updated.lastChecked.toISOString()).toBe(startOfToday().toISOString());
+  });
+
+  test('returns service unavailable and leaves the listing unchanged if PostgreSQL persistence fails', async () => {
+    const record = await Opportunity.create({
+      title: 'Student Hackathon',
+      organizer: 'Example University',
+      officialUrl: 'https://example.edu/hackathon',
+      type: 'hackathon',
+      mode: 'online',
+      eligibilityNotes: 'Open to students',
+      deadline: '2027-01-01',
+      lastChecked: '2026-11-01',
+    });
+    await agent.post('/api/login')
+      .send({ username: 'coordinator', password: 'test-password' });
+    recordOpportunityRecheck.mockRejectedValueOnce(
+      new PersistenceError('Could not persist opportunity re-check')
+    );
+    const logError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const response = await agent.put(`/api/admin/opportunities/${record._id}/recheck`);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error.message).toBe('Could not save opportunity re-check');
+      const unchanged = await Opportunity.findById(record._id);
+      expect(unchanged.lastChecked.toISOString()).toBe(new Date('2026-11-01').toISOString());
+    } finally {
+      logError.mockRestore();
+    }
   });
 });

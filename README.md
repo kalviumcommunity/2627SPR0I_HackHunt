@@ -3,16 +3,7 @@
 
 ## Getting Started
 
-HackHunt is a centralized platform that helps students discover hackathons and student opportunities before their deadlines. See [How to run](#how-to-run) for setup instructions.
-
-## Assigned Incident
-
-This repository setup and documentation task is tracked under:
-
-[Issue #5 – Initial Team Workflow Setup](https://github.com/kalviumcommunity/2627SPR0I_HackHunt/issues/5)
-
-
-
+HackHunt is a centralized platform that helps students discover hackathons and student opportunities before their deadlines. See [Run locally with Docker Compose](#run-locally-with-docker-compose) for setup instructions.
 
 # HackHunt
 ### Find the right hackathon before the deadline.
@@ -22,6 +13,8 @@ This repository setup and documentation task is tracked under:
 Students often learn about suitable hackathons after registration deadlines have passed because information is scattered across messages and different platforms. HackHunt solves this problem by providing a centralized, curated opportunity board where coordinators can add hackathon details, including official links, eligibility criteria, deadlines, and last-checked dates. Students can browse and filter current opportunities to find relevant hackathons before it is too late. Listings are stored persistently so that records remain available after application restarts.
 
 The platform does not require automated scraping or personalized AI recommendations.
+
+The service-baseline action uses the existing coordinator workflow from the [product requirements](docs/PRD.md): after verifying an opportunity on its official site, the coordinator re-checks its listing. The existing last-checked date is updated in MongoDB, and each successful re-check is recorded durably in PostgreSQL.
 
 ## 2. Team Details
 
@@ -36,7 +29,8 @@ The platform does not require automated scraping or personalized AI recommendati
 
 - **Frontend:** React
 - **Backend:** Node.js and Express.js
-- **Database:** MongoDB
+- **Opportunity database:** MongoDB
+- **Re-check history database:** PostgreSQL
 - **Containerization:** Docker
 - **CI/CD:** GitHub Actions
 - **Deployment:** Render
@@ -60,79 +54,107 @@ The platform does not require automated scraping or personalized AI recommendati
 
 ### Data and DevOps
 - Store opportunity records persistently in MongoDB.
-- Preserve records after application restarts.
-- Build and run the backend as a Docker image (see "Run with Docker" below).
+- Store coordinator re-check history in PostgreSQL so it survives app restarts.
+- Build and run the existing application with Docker Compose.
 - Automate testing and builds using GitHub Actions.
 - Deploy the application using Render.
 
-## How to run
+## Run locally with Docker Compose
 
 ### Prerequisites
-- Node.js and npm
-- A MongoDB Atlas connection string
+- Docker Desktop with its engine running
 
-### Configure the backend
+### Configure
 
-From the repository root, enter the backend folder and create the environment file:
-
-```bash
-cd backend
-```
-
-On Windows PowerShell:
+From the repository root, create the ignored Compose environment file:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-On macOS/Linux:
+Set a local PostgreSQL password in `POSTGRES_PASSWORD` and the matching `DATABASE_URL`. Set a coordinator username, password hash, and long random `COORDINATOR_JWT_SECRET`. Generate a password hash from the backend folder:
 
-```bash
-cp .env.example .env
-```
-
-Edit the copied `.env` file and set `MONGODB_URI` to your MongoDB Atlas connection string. Set a coordinator username and a long random `COORDINATOR_JWT_SECRET`.
-
-Create a password hash and copy the printed value into `COORDINATOR_PASSWORD_HASH` in `.env`:
-
-```bash
+```powershell
+cd backend
 npm run hash-password -- "your-coordinator-password"
+cd ..
 ```
 
-Install backend dependencies and seed the database:
+Copy the printed hash into `COORDINATOR_PASSWORD_HASH` in the root `.env`, keeping it single-quoted so Compose does not expand the `$` characters in the hash. The example values are for local setup only; do not commit `.env`.
 
-```bash
-npm install
-npm run seed
+### Install, migrate, and start
+
+The Docker build installs backend dependencies. Start the existing app and its MongoDB/PostgreSQL databases:
+
+```powershell
+docker compose up -d --build
+docker compose exec app npm run db:migrate
 ```
 
-Start the backend from the `backend` folder:
+The app also applies this idempotent migration automatically at startup. PostgreSQL data is stored in the `postgres_data` named volume. To seed the existing MongoDB opportunity board:
 
-```bash
-npm run dev
+```powershell
+docker compose exec app npm run seed
 ```
 
-### Start the frontend
+The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `MONGODB_URI` and `DATABASE_URL` in `backend/.env`; MongoDB and PostgreSQL must already be running.
 
-In a second terminal, from the repository root:
+### Coordinator re-check API
 
-```bash
-cd frontend
-npm install
-npm run dev
+The existing coordinator-authenticated endpoint performs the incident-related business action:
+
+```http
+PUT /api/admin/opportunities/:id/recheck
 ```
 
-Open the local URL printed by Vite. Its development proxy forwards `/api` requests to the backend.
+It updates `lastChecked` in MongoDB and inserts the opportunity ID, checked date, and event timestamp into PostgreSQL's `opportunity_rechecks` table. Invalid IDs return `400`, missing opportunities return `404`, unauthenticated callers return `401`, and PostgreSQL persistence failures return `503`.
 
-### Run the backend tests
+Example (after setting up a coordinator account and replacing the ID with an opportunity ID). The login file is written as UTF-8 without a BOM before `curl.exe` sends it:
 
-From the `backend` folder:
-
-```bash
-npm test
+```powershell
+$loginFile = Join-Path $env:TEMP 'hackhunt-login.json'
+[System.IO.File]::WriteAllText($loginFile, '{"username":"coordinator","password":"your-coordinator-password"}', [System.Text.UTF8Encoding]::new($false))
+curl.exe -c cookies.txt -H 'Content-Type: application/json' --data-binary "@$loginFile" http://localhost:5000/api/login
+curl.exe -b cookies.txt http://localhost:5000/api/admin/opportunities
+curl.exe -i -b cookies.txt -X PUT http://localhost:5000/api/admin/opportunities/0123456789abcdef01234567/recheck
 ```
 
-Do not commit `.env` or other files containing credentials.
+Example successful response:
+
+```json
+{
+ "_id": "0123456789abcdef01234567",
+ "title": "Student Hackathon",
+ "organizer": "Example University",
+ "officialUrl": "https://example.edu/hackathon",
+ "type": "hackathon",
+ "mode": "online",
+ "eligibilityNotes": "Open to all students",
+ "deadline": "2027-01-01T00:00:00.000Z",
+ "lastChecked": "2026-11-18T00:00:00.000Z",
+ "status": "active"
+}
+```
+
+Run the backend tests against the Compose MongoDB test database in PowerShell:
+
+```powershell
+$env:TEST_MONGODB_URI = "mongodb://127.0.0.1:27018/hackhunt_test"
+npm test --prefix backend
+Remove-Item Env:TEST_MONGODB_URI
+```
+
+The test helper only accepts a database name ending in `_test`.
+
+To start the existing frontend, run `npm install --prefix frontend` and then `npm run dev --prefix frontend` from the repository root.
+
+To confirm PostgreSQL history, run:
+
+```powershell
+docker compose exec postgres psql -U hackhunt -d hackhunt -c "SELECT opportunity_id, last_checked, rechecked_at FROM opportunity_rechecks ORDER BY id DESC LIMIT 5;"
+```
+
+To verify data survives an app restart, run `docker compose restart app`, then repeat the API request or SQL query. To stop the containers without deleting persistent records, run `docker compose down` (do not add `-v`).
 
 ## 7. Demo Link
 
@@ -153,25 +175,3 @@ The project board tracks development tasks, team responsibilities, testing, depl
 ## 9. Scope and Limitations
 
 HackHunt focuses on manually curated hackathon opportunities. Automated scraping, personalized AI recommendations, student accounts, email or SMS alerts, in-app registration, and a separate mobile application are outside the scope of this sprint.
-
-
-## Run with Docker
-
-Build the image:
-
-    docker build -t hackhunt-backend ./backend
-
-Start MongoDB on a Docker network:
-
-    docker network create hackhunt-net
-    docker run -d --name mongo --network hackhunt-net mongo:7
-
-Run the backend on the same network:
-
-    docker run --rm --network hackhunt-net -p 5000:5000 -e PORT=5000 -e MONGODB_URI="mongodb://mongo:27017/hackhunt" hackhunt-backend
-
-Check it:
-
-    curl http://localhost:5000/health
-
-To use MongoDB Atlas instead, set `MONGODB_URI` to your Atlas connection string and skip the network and MongoDB steps.

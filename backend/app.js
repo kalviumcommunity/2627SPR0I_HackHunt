@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
 const adminOpportunityRoutes = require('./routes/adminOpportunities');
 const opportunityRoutes = require('./routes/opportunities');
+const { PersistenceError } = require('./db/recheckStore');
 
 const app = express();
 
@@ -31,6 +32,11 @@ app.use((err, req, res, next) => {
   }
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ error: { message: 'Request body too large' } });
+  }
+
+  if (err instanceof PersistenceError) {
+    console.error(err);
+    return res.status(503).json({ error: { message: 'Could not save opportunity re-check' } });
   }
 
   console.error(err);

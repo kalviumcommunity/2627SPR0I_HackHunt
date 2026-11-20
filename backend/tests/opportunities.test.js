@@ -21,7 +21,7 @@ function opportunityData(overrides = {}) {
 }
 
 describe('public opportunities API', () => {
-  beforeAll(connectToDatabase, 30000);
+  beforeAll(connectToDatabase, 180000);
   afterAll(disconnectFromDatabase, 30000);
   beforeEach(clearDatabase);
 

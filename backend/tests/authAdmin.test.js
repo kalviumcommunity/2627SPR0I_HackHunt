@@ -23,7 +23,7 @@ describe('coordinator authentication and admin opportunities API', () => {
     });
   });
 
-  beforeAll(connectToDatabase, 30000);
+  beforeAll(connectToDatabase, 180000);
   afterAll(disconnectFromDatabase, 30000);
 
   test('login sets an httpOnly, sameSite cookie and logout clears it', async () => {

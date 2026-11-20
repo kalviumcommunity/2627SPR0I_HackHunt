@@ -2,7 +2,6 @@ const express = require('express');
 const Opportunity = require('../models/Opportunity');
 const { requireCoordinator } = require('../middleware/auth');
 const { startOfToday } = require('../utils/dates');
-const { recordOpportunityRecheck } = require('../db/recheckStore');
 
 const router = express.Router();
 const validStatuses = ['active', 'archived'];
@@ -77,11 +76,7 @@ router.put('/:id/recheck', async (req, res, next) => {
     }
     opportunity.lastChecked = startOfToday();
     await opportunity.validate();
-    await recordOpportunityRecheck(
-      opportunity._id.toString(),
-      opportunity.lastChecked,
-      () => opportunity.save()
-    );
+    await opportunity.save();
     return res.json(opportunity);
   } catch (error) {
     if (error.name === 'ValidationError' || error.name === 'CastError') {

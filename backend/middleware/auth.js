@@ -4,12 +4,12 @@ const COOKIE_NAME = 'coordinatorToken';
 
 function requireCoordinator(req, res, next) {
   const token = req.cookies && req.cookies[COOKIE_NAME];
-  if (!token || !process.env.COORDINATOR_JWT_SECRET) {
+  if (!token || !process.env.JWT_SECRET) {
     return res.status(401).json({ error: { message: 'Authentication required' } });
   }
 
   try {
-    jwt.verify(token, process.env.COORDINATOR_JWT_SECRET, { algorithms: ['HS256'] });
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     return next();
   } catch {
     return res.status(401).json({ error: { message: 'Authentication required' } });

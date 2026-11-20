@@ -1,29 +1,16 @@
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
-
 require('dotenv').config();
 
 const mongoose = require('mongoose');
 const app = require('./app');
-const { migrate } = require('./db/migrate');
-const { closePool } = require('./db/pool');
 
 async function start() {
   const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!mongoUri) {
-    throw new Error('MONGODB_URI or MONGO_URI must be set');
+    throw new Error('MONGODB_URI or MONGO_URI must be set before starting the backend');
   }
 
   await mongoose.connect(mongoUri);
-  try {
-    await migrate();
-  } catch (error) {
-    await mongoose.disconnect();
-    await closePool();
-    throw error;
-  }
-
-  const port = process.env.PORT || 5000;
+  const port = Number(process.env.PORT) || 5000;
   return app.listen(port, () => {
     console.log(`HackHunt API listening on port ${port}`);
   });

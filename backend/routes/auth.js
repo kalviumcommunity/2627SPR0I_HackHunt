@@ -22,8 +22,8 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/login', loginLimiter, async (req, res, next) => {
-  const { COORDINATOR_USERNAME, COORDINATOR_PASSWORD_HASH, COORDINATOR_JWT_SECRET } = process.env;
-  if (!COORDINATOR_USERNAME || !COORDINATOR_PASSWORD_HASH || !COORDINATOR_JWT_SECRET) {
+  const { COORDINATOR_USERNAME, COORDINATOR_PASSWORD_HASH, JWT_SECRET } = process.env;
+  if (!COORDINATOR_USERNAME || !COORDINATOR_PASSWORD_HASH || !JWT_SECRET) {
     return res.status(500).json({ error: { message: 'Coordinator authentication is not configured' } });
   }
 
@@ -53,7 +53,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
     const token = jwt.sign(
       { username: COORDINATOR_USERNAME },
-      COORDINATOR_JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '8h' }
     );
     res.cookie(COOKIE_NAME, token, { ...cookieOptions(), maxAge: 8 * 60 * 60 * 1000 });

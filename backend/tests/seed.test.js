@@ -1,15 +1,13 @@
-jest.mock('mongoose', () => ({
-  connect: jest.fn(),
-  disconnect: jest.fn(),
+jest.mock('../db/opportunityStore', () => ({
+  replaceAll: jest.fn(),
 }));
 
-jest.mock('../models/Opportunity', () => ({
-  deleteMany: jest.fn(),
-  insertMany: jest.fn(),
+jest.mock('../db/pool', () => ({
+  closePool: jest.fn(),
 }));
 
-const mongoose = require('mongoose');
-const Opportunity = require('../models/Opportunity');
+const { replaceAll } = require('../db/opportunityStore');
+const { closePool } = require('../db/pool');
 const { buildSeedOpportunities, seed } = require('../seed');
 
 describe('opportunity seed script', () => {
@@ -17,7 +15,7 @@ describe('opportunity seed script', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.MONGODB_URI = 'mongodb://localhost/hackhunt-test';
+    process.env.DATABASE_URL = 'postgresql://localhost/hackhunt_test';
   });
 
   test('builds eight valid sample opportunities with an expired and a stale listing', () => {
@@ -35,16 +33,14 @@ describe('opportunity seed script', () => {
       .toBe(true);
   });
 
-  test('clears the collection before inserting the samples and closes the connection', async () => {
+  test('replaces the stored listings and closes the PostgreSQL pool', async () => {
     const inserted = buildSeedOpportunities(now);
-    Opportunity.insertMany.mockResolvedValue(inserted);
+    replaceAll.mockResolvedValue(inserted);
 
     const result = await seed(now);
 
-    expect(mongoose.connect).toHaveBeenCalledWith(process.env.MONGODB_URI);
-    expect(Opportunity.deleteMany).toHaveBeenCalledWith({});
-    expect(Opportunity.insertMany).toHaveBeenCalledWith(buildSeedOpportunities(now));
+    expect(replaceAll).toHaveBeenCalledWith(buildSeedOpportunities(now));
     expect(result).toHaveLength(8);
-    expect(mongoose.disconnect).toHaveBeenCalledTimes(1);
+    expect(closePool).toHaveBeenCalledTimes(1);
   });
 });

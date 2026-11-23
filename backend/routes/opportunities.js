@@ -1,6 +1,6 @@
 const express = require('express');
-const Opportunity = require('../models/Opportunity');
-const { startOfToday, getDaysLeft, isClosingSoon, isStale } = require('../utils/dates');
+const { findPublic, findCurrentById } = require('../db/opportunityStore');
+const { getDaysLeft, isClosingSoon, isStale } = require('../utils/dates');
 
 const router = express.Router();
 const validModes = ['online', 'offline', 'hybrid'];
@@ -32,19 +32,12 @@ function validateQuery(query) {
   return null;
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function serializeOpportunity(opportunity, now) {
-  const item = typeof opportunity.toObject === 'function'
-    ? opportunity.toObject()
-    : opportunity;
   return {
-    ...item,
-    isClosingSoon: isClosingSoon(item.deadline, now),
-    isStale: isStale(item.lastChecked, now),
-    daysLeft: getDaysLeft(item.deadline, now),
+    ...opportunity,
+    isClosingSoon: isClosingSoon(opportunity.deadline, now),
+    isStale: isStale(opportunity.lastChecked, now),
+    daysLeft: getDaysLeft(opportunity.deadline, now),
   };
 }
 
@@ -55,25 +48,15 @@ router.get('/', async (req, res, next) => {
   }
 
   const now = new Date();
-  const today = startOfToday(now);
-  const filter = { status: 'active', deadline: { $gte: today } };
-  if (req.query.mode) filter.mode = req.query.mode;
-  if (req.query.type) filter.type = req.query.type;
-  if (req.query.window) {
-    filter.deadline.$lte = new Date(today.getTime() + Number(req.query.window) * 24 * 60 * 60 * 1000);
-  }
   const searchTerm = req.query.q && req.query.q.trim();
-  if (searchTerm) {
-    const search = new RegExp(escapeRegex(searchTerm), 'i');
-    filter.$or = [
-      { title: search },
-      { organizer: search },
-      { eligibilityNotes: search },
-    ];
-  }
 
   try {
-    const opportunities = await Opportunity.find(filter).sort({ deadline: 1 }).lean();
+    const opportunities = await findPublic({
+      mode: req.query.mode,
+      type: req.query.type,
+      window: req.query.window,
+      q: searchTerm || undefined,
+    }, now);
     return res.json(opportunities.map((item) => serializeOpportunity(item, now)));
   } catch (error) {
     return next(error);
@@ -87,11 +70,7 @@ router.get('/:id', async (req, res, next) => {
 
   try {
     const now = new Date();
-    const opportunity = await Opportunity.findOne({
-      _id: req.params.id,
-      status: 'active',
-      deadline: { $gte: startOfToday(now) },
-    }).lean();
+    const opportunity = await findCurrentById(req.params.id, now);
     if (!opportunity) {
       return res.status(404).json({ error: { message: 'Opportunity not found' } });
     }

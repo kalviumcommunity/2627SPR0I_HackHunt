@@ -156,7 +156,7 @@ Each measure below has a **target** and a clear way to **verify** it.
 - **Target:** all records are still there after the app restarts or is deployed again.
 - **How we verify:**
   - **Restart test on our computers:** add 5 test listings and note the count. Run `docker compose down` and then `docker compose up`. The count and the content must be the same. We repeat this after rebuilding the images with `docker compose up --build`.
-  - **Redeploy test on Render:** add a listing on the live site, deploy a new version, and check that the listing is still there. This works because the data is stored in MongoDB, not inside the app container.
+  - **Redeploy test on Render:** add a listing on the live site, deploy a new version, and check that the listing is still there. This works because the data is stored in PostgreSQL, not inside the app container.
   - The result of both tests is written in the test log with the date.
 
 #### 4. Student finds a listing in under 30 seconds
@@ -250,7 +250,7 @@ Automatic scraping, AI recommendations, student accounts, email or SMS alerts, i
 |---|---|
 | Frontend | React |
 | Backend | Node.js with Express |
-| Database | MongoDB |
+| Database | PostgreSQL |
 | DevOps | Docker and GitHub Actions. Deployed on Render |
 
 ### 6.2 Required data and APIs
@@ -260,8 +260,8 @@ No outside API is needed. The coordinator types in the data from official sites.
 ### 6.3 Technical limitations
 
 - Data is added by hand, so it must be kept up to date.
-- MongoDB is more than enough for a small board, but the free Atlas plan has a small storage limit.
-- The free Render plan can go to sleep when not used, so the first page load may be slow. Data is safe because it is stored in MongoDB, not on Render.
+- PostgreSQL is more than enough for a small board, but the free hosting plan has a small storage limit.
+- The free Render plan can go to sleep when not used, so the first page load may be slow. Data is safe because it is stored in PostgreSQL, not on Render.
 - The team is only three people, so we keep the scope small.
 
 ### 6.4 Security and privacy
@@ -280,15 +280,15 @@ No outside API is needed. The coordinator types in the data from official sites.
 | Team member | Area | Work |
 |---|---|---|
 | Sera | Frontend | Student page, cards, filters and search, warning tags, coordinator login page and forms, connect all pages to the API. |
-| Issac | Backend and Database | API, login, input checks, security, health check. MongoDB collections, saved storage, sample data and backup. |
+| Issac | Backend and Database | API, login, input checks, security, health check. PostgreSQL tables, saved storage, sample data and backup. |
 | Joshua | DevOps, Testing and Docs | Docker and settings, GitHub Actions pipeline, deployment, API and UI tests, user testing, README and demo guide. |
 
 ### 7.2 Task deadlines
 
 | Deadline | Issac | Sera | Joshua |
 |---|---|---|---|
-| Week 1 | Set up backend. Design MongoDB collections. Build add, edit, delete API. | Page wireframes. Set up frontend. Student page layout and cards. | Set up repository and branches. Write Dockerfile. Start GitHub Actions. |
-| Week 2 | Login, filter queries, security checks, sample data, backup. | Filters, search and badges. Coordinator pages connected to the API. | Docker with MongoDB volume. Automatic tests and build. API tests. |
+| Week 1 | Set up backend. Design PostgreSQL tables. Build add, edit, delete API. | Page wireframes. Set up frontend. Student page layout and cards. | Set up repository and branches. Write Dockerfile. Start GitHub Actions. |
+| Week 2 | Login, filter queries, security checks, sample data, backup. | Filters, search and badges. Coordinator pages connected to the API. | Docker with PostgreSQL volume. Automatic tests and build. API tests. |
 | Week 3 | Fix bugs. Restore test. Final settings. | Fix bugs. Final design checks on phone and laptop. | Deploy online. User testing. README and demo practice. |
 
 ### 7.3 Testing plan
@@ -301,7 +301,7 @@ No outside API is needed. The coordinator types in the data from official sites.
 
 ### 7.4 Deployment
 
-The app runs in Docker containers (React, Express and MongoDB) with a saved data volume. Anyone can start it with `docker compose up`. The Docker image is deployed online on Render after GitHub Actions tests pass, and it connects to MongoDB Atlas so data is kept.
+The app runs in Docker containers (React, Express and PostgreSQL) with a saved data volume. Anyone can start it with `docker compose up`. The Docker image is deployed online on Render after GitHub Actions tests pass, and it connects to managed PostgreSQL so data is kept.
 
 ### 7.5 Demo
 

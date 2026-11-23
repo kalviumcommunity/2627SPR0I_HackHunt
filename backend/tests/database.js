@@ -1,34 +1,36 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { getPool, setPool, closePool } = require('../db/pool');
+const { migrate } = require('../db/migrate');
 
-let mongoServer;
+let memoryPool;
 
 async function connectToDatabase() {
-  const testMongoUri = process.env.TEST_MONGODB_URI;
-  if (testMongoUri) {
-    const databaseName = new URL(testMongoUri).pathname.replace(/^\/+/, '');
+  const connectionString = process.env.TEST_DATABASE_URL;
+
+  if (connectionString) {
+    const databaseName = new URL(connectionString).pathname.replace(/^\/+/, '');
     if (!databaseName.endsWith('_test')) {
-      throw new Error('TEST_MONGODB_URI database name must end in _test');
+      throw new Error('TEST_DATABASE_URL database name must end in _test');
     }
-    await mongoose.connect(testMongoUri);
-    return;
+    process.env.DATABASE_URL = connectionString;
+  } else {
+    // Tests run against an in-memory PostgreSQL instance when no server is configured.
+    const { newDb } = require('pg-mem');
+    const adapter = newDb().adapters.createPg();
+    memoryPool = new adapter.Pool();
+    setPool(memoryPool);
   }
 
-  mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
+  await migrate();
 }
 
 async function clearDatabase() {
-  const collections = Object.values(mongoose.connection.collections);
-  await Promise.all(collections.map((collection) => collection.deleteMany({})));
+  await getPool().query('DELETE FROM opportunity_rechecks');
+  await getPool().query('DELETE FROM opportunities');
 }
 
 async function disconnectFromDatabase() {
-  await mongoose.disconnect();
-  if (mongoServer) {
-    await mongoServer.stop();
-    mongoServer = null;
-  }
+  await closePool();
+  memoryPool = undefined;
 }
 
 module.exports = { connectToDatabase, clearDatabase, disconnectFromDatabase };

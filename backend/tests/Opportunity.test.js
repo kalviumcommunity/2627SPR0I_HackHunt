@@ -1,6 +1,6 @@
-const Opportunity = require('../models/Opportunity');
+const { normalizeOpportunity } = require('../db/opportunityStore');
 
-describe('Opportunity model', () => {
+describe('opportunity validation', () => {
   const validOpportunity = {
     title: 'Campus Hackathon',
     organizer: 'Example University',
@@ -9,32 +9,37 @@ describe('Opportunity model', () => {
     mode: 'online',
     eligibilityNotes: 'Open to all students',
     deadline: new Date('2026-12-01T00:00:00.000Z'),
-    lastChecked: new Date()
+    lastChecked: new Date(),
   };
 
-  test('accepts a valid opportunity and configures timestamps', async () => {
-    const opportunity = new Opportunity(validOpportunity);
-    await expect(opportunity.validate()).resolves.toBeUndefined();
-    expect(opportunity.status).toBe('active');
-    expect(Opportunity.schema.options.timestamps).toBe(true);
+  test('accepts a valid opportunity and defaults the status to active', () => {
+    const opportunity = normalizeOpportunity(validOpportunity);
+
+    expect(opportunity).toMatchObject({
+      title: 'Campus Hackathon',
+      organizer: 'Example University',
+      officialUrl: 'https://example.edu/hackathon',
+      type: 'hackathon',
+      mode: 'online',
+      deadline: '2026-12-01',
+      status: 'active',
+    });
   });
 
-  test('requires mandatory fields and validates URL, enums, and lastChecked', async () => {
-    const missingFields = new Opportunity();
-    await expect(missingFields.validate()).rejects.toMatchObject({
-      name: 'ValidationError'
-    });
+  test('requires mandatory fields and validates URL, enums, and lastChecked', () => {
+    const { title, organizer, officialUrl, type, mode, eligibilityNotes, deadline, lastChecked } = validOpportunity;
+    expect(() => normalizeOpportunity({})).toThrow(expect.objectContaining({ name: 'ValidationError' }));
 
     for (const invalid of [
-      { officialUrl: 'javascript:alert(1)' },
-      { type: 'unlisted' },
-      { mode: 'remote' },
-      { lastChecked: new Date(Date.now() + 60_000) }
+      { title: '', organizer, officialUrl, type, mode, eligibilityNotes, deadline, lastChecked },
+      { title, organizer: '', officialUrl, type, mode, eligibilityNotes, deadline, lastChecked },
+      { ...validOpportunity, officialUrl: 'javascript:alert(1)' },
+      { ...validOpportunity, type: 'unlisted' },
+      { ...validOpportunity, mode: 'remote' },
+      { ...validOpportunity, deadline: 'not-a-date' },
+      { ...validOpportunity, lastChecked: new Date(Date.now() + 24 * 60 * 60 * 1000) },
     ]) {
-      const opportunity = new Opportunity({ ...validOpportunity, ...invalid });
-      await expect(opportunity.validate()).rejects.toMatchObject({
-        name: 'ValidationError'
-      });
+      expect(() => normalizeOpportunity(invalid)).toThrow(expect.objectContaining({ name: 'ValidationError' }));
     }
   });
 });

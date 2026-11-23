@@ -1,8 +1,8 @@
 const express = require('express');
-const Opportunity = require('../models/Opportunity');
+const { create, findAll, update, remove } = require('../db/opportunityStore');
 const { requireCoordinator } = require('../middleware/auth');
 const { startOfToday } = require('../utils/dates');
-const { recordOpportunityRecheck } = require('../db/recheckStore');
+const { recheckOpportunity } = require('../db/recheckStore');
 
 const router = express.Router();
 const validStatuses = ['active', 'archived'];
@@ -36,8 +36,7 @@ router.get('/', async (req, res, next) => {
   }
 
   try {
-    const filter = req.query.status ? { status: req.query.status } : {};
-    const opportunities = await Opportunity.find(filter).sort({ deadline: 1 }).lean();
+    const opportunities = await findAll({ status: req.query.status });
     return res.json(opportunities);
   } catch (error) {
     return next(error);
@@ -53,12 +52,10 @@ router.post('/', async (req, res, next) => {
   }
 
   try {
-    const opportunity = new Opportunity(req.body);
-    await opportunity.validate();
-    await opportunity.save();
+    const opportunity = await create(req.body);
     return res.status(201).json(opportunity);
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
+    if (error.name === 'ValidationError') {
       return res.status(400).json({ error: { message: 'Invalid opportunity data' } });
     }
     return next(error);
@@ -71,22 +68,15 @@ router.put('/:id/recheck', async (req, res, next) => {
   }
 
   try {
-    const opportunity = await Opportunity.findById(req.params.id);
+    const opportunity = await recheckOpportunity(
+      req.params.id,
+      startOfToday().toISOString().slice(0, 10)
+    );
     if (!opportunity) {
       return res.status(404).json({ error: { message: 'Opportunity not found' } });
     }
-    opportunity.lastChecked = startOfToday();
-    await opportunity.validate();
-    await recordOpportunityRecheck(
-      opportunity._id.toString(),
-      opportunity.lastChecked,
-      () => opportunity.save()
-    );
     return res.json(opportunity);
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).json({ error: { message: 'Invalid opportunity data' } });
-    }
     return next(error);
   }
 });
@@ -103,18 +93,13 @@ router.put('/:id', async (req, res, next) => {
   }
 
   try {
-    const opportunity = await Opportunity.findById(req.params.id);
+    const opportunity = await update(req.params.id, req.body);
     if (!opportunity) {
       return res.status(404).json({ error: { message: 'Opportunity not found' } });
     }
-    const replacement = { ...req.body };
-    if (replacement.status === undefined) replacement.status = 'active';
-    opportunity.overwrite(replacement);
-    await opportunity.validate();
-    await opportunity.save();
     return res.json(opportunity);
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
+    if (error.name === 'ValidationError') {
       return res.status(400).json({ error: { message: error.message } });
     }
     return next(error);
@@ -127,8 +112,8 @@ router.delete('/:id', async (req, res, next) => {
   }
 
   try {
-    const opportunity = await Opportunity.findByIdAndDelete(req.params.id);
-    if (!opportunity) {
+    const deleted = await remove(req.params.id);
+    if (!deleted) {
       return res.status(404).json({ error: { message: 'Opportunity not found' } });
     }
     return res.status(204).end();

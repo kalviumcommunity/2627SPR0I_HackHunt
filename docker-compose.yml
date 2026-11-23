@@ -1,3 +1,4 @@
+
 services:
   app:
     build:
@@ -8,13 +9,20 @@ services:
     ports:
       - "5000:5000"
     depends_on:
+      mongo:
+        condition: service_started
       postgres:
         condition: service_healthy
 
-  postgres:
-    image: postgres:17-alpine
+  mongo:
+    image: mongo:7.0.48
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:27019:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  postgres:
+    image: postgres:17.12-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-hackhunt}
       POSTGRES_USER: ${POSTGRES_USER:-hackhunt}
@@ -28,4 +36,5 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
 volumes:
+  mongo_data:
   postgres_data:

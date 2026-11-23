@@ -14,7 +14,7 @@ Students often learn about suitable hackathons after registration deadlines have
 
 The platform does not require automated scraping or personalized AI recommendations.
 
-The service-baseline action uses the existing coordinator workflow from the [product requirements](docs/PRD.md): after verifying an opportunity on its official site, the coordinator re-checks its listing. The existing last-checked date is updated in MongoDB, and each successful re-check is recorded durably in PostgreSQL.
+The service-baseline action uses the existing coordinator workflow from the [product requirements](docs/PRD.md): after verifying an opportunity on its official site, the coordinator re-checks its listing. The existing last-checked date is updated in PostgreSQL, and each successful re-check is recorded durably in the same database.
 
 ## 2. Team Details
 
@@ -29,12 +29,10 @@ The service-baseline action uses the existing coordinator workflow from the [pro
 
 - **Frontend:** React
 - **Backend:** Node.js and Express.js
-- **Opportunity database:** MongoDB
-- **Re-check history database:** PostgreSQL
+- **Database:** PostgreSQL
 - **Containerization:** Docker
 - **CI/CD:** GitHub Actions
 - **Deployment:** Render
-- **Database Hosting:** MongoDB Atlas
 
 ## 4. Features
 
@@ -53,8 +51,7 @@ The service-baseline action uses the existing coordinator workflow from the [pro
 - Validate required fields before saving changes.
 
 ### Data and DevOps
-- Store opportunity records persistently in MongoDB.
-- Store coordinator re-check history in PostgreSQL so it survives app restarts.
+- Store opportunity records and coordinator re-check history persistently in PostgreSQL so they survive app restarts.
 - Build and run the existing application with Docker Compose.
 - Automate testing and builds using GitHub Actions.
 - Deploy the application using Render.
@@ -84,20 +81,20 @@ Copy the printed hash into `COORDINATOR_PASSWORD_HASH` in the root `.env`, keepi
 
 ### Install, migrate, and start
 
-The Docker build installs backend dependencies. Start the existing app and its MongoDB/PostgreSQL databases:
+The Docker build installs backend dependencies. Start the app and its PostgreSQL database:
 
 ```powershell
 docker compose up -d --build
 docker compose exec app npm run db:migrate
 ```
 
-The app also applies this idempotent migration automatically at startup. PostgreSQL data is stored in the `postgres_data` named volume. To seed the existing MongoDB opportunity board:
+The app also applies this idempotent migration automatically at startup. PostgreSQL data is stored in the `postgres_data` named volume. To seed the opportunity board:
 
 ```powershell
 docker compose exec app npm run seed
 ```
 
-The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `MONGODB_URI` and `DATABASE_URL` in `backend/.env`; MongoDB and PostgreSQL must already be running.
+The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `DATABASE_URL` in `backend/.env`; PostgreSQL must already be running.
 
 ### Coordinator re-check API
 
@@ -107,7 +104,7 @@ The existing coordinator-authenticated endpoint performs the incident-related bu
 PUT /api/admin/opportunities/:id/recheck
 ```
 
-It updates `lastChecked` in MongoDB and inserts the opportunity ID, checked date, and event timestamp into PostgreSQL's `opportunity_rechecks` table. Invalid IDs return `400`, missing opportunities return `404`, unauthenticated callers return `401`, and PostgreSQL persistence failures return `503`.
+It updates `lastChecked` in PostgreSQL and inserts the opportunity ID, checked date, and event timestamp into the `opportunity_rechecks` table. Invalid IDs return `400`, missing opportunities return `404`, unauthenticated callers return `401`, and PostgreSQL persistence failures return `503`.
 
 Example (after setting up a coordinator account and replacing the ID with an opportunity ID). The login file is written as UTF-8 without a BOM before `curl.exe` sends it:
 
@@ -136,15 +133,16 @@ Example successful response:
 }
 ```
 
-Run the backend tests against the Compose MongoDB test database in PowerShell:
+Run the backend tests against the Compose PostgreSQL test database in PowerShell:
 
 ```powershell
-$env:TEST_MONGODB_URI = "mongodb://127.0.0.1:27018/hackhunt_test"
+docker compose exec postgres createdb -U hackhunt hackhunt_test
+$env:TEST_DATABASE_URL = "postgresql://hackhunt:your-local-password@127.0.0.1:5432/hackhunt_test"
 npm test --prefix backend
-Remove-Item Env:TEST_MONGODB_URI
+Remove-Item Env:TEST_DATABASE_URL
 ```
 
-The test helper only accepts a database name ending in `_test`.
+Without `TEST_DATABASE_URL`, the tests run against an in-memory PostgreSQL instance. The helper only accepts a database name ending in `_test`.
 
 To start the existing frontend, run `npm install --prefix frontend` and then `npm run dev --prefix frontend` from the repository root.
 

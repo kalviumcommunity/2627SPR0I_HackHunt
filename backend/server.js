@@ -1,21 +1,17 @@
 require('dotenv').config();
 
-const mongoose = require('mongoose');
 const app = require('./app');
 const { migrate } = require('./db/migrate');
 const { closePool } = require('./db/pool');
 
 async function start() {
-  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-  if (!mongoUri) {
-    throw new Error('MONGODB_URI or MONGO_URI must be set');
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL must be set');
   }
 
-  await mongoose.connect(mongoUri);
   try {
     await migrate();
   } catch (error) {
-    await mongoose.disconnect();
     await closePool();
     throw error;
   }

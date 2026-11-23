@@ -1,7 +1,7 @@
 require('dotenv').config();
 
-const mongoose = require('mongoose');
-const Opportunity = require('./models/Opportunity');
+const { replaceAll } = require('./db/opportunityStore');
+const { closePool } = require('./db/pool');
 const { startOfToday } = require('./utils/dates');
 
 function addDays(date, days) {
@@ -109,17 +109,14 @@ function buildSeedOpportunities(now = new Date()) {
 }
 
 async function seed(now = new Date()) {
-  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-  if (!mongoUri) {
-    throw new Error('MONGODB_URI or MONGO_URI must be set');
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL must be set');
   }
 
-  await mongoose.connect(mongoUri);
   try {
-    await Opportunity.deleteMany({});
-    return await Opportunity.insertMany(buildSeedOpportunities(now));
+    return await replaceAll(buildSeedOpportunities(now));
   } finally {
-    await mongoose.disconnect();
+    await closePool();
   }
 }
 

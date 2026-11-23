@@ -4,8 +4,8 @@ A website where students find current hackathons and opportunities. A coordinato
 
 ## Stack
 - Frontend: React (Vite) in /frontend
-- Backend: Node.js + Express + Mongoose in /backend
-- Database: MongoDB (local Docker container; MongoDB Atlas when deployed)
+- Backend: Node.js + Express + `pg` in /backend
+- Database: PostgreSQL (local Docker container; managed PostgreSQL when deployed)
 - DevOps: Docker, docker-compose, GitHub Actions, Render
 - Tests: Jest + Supertest
 

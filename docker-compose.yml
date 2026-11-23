@@ -14,14 +14,14 @@ services:
         condition: service_healthy
 
   mongo:
-    image: mongo:7
+    image: mongo:7.0.48
     ports:
-      - "127.0.0.1:27018:27017"
+      - "127.0.0.1:27019:27017"
     volumes:
       - mongo_data:/data/db
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.12-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-hackhunt}
       POSTGRES_USER: ${POSTGRES_USER:-hackhunt}

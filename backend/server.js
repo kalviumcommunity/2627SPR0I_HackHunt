@@ -1,6 +1,3 @@
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
-
 require('dotenv').config();
 
 const app = require('./app');
@@ -27,6 +24,15 @@ async function start() {
 
 if (require.main === module) {
   start().catch((error) => {
+    if (
+      error.code === 'ECONNREFUSED' ||
+      (Array.isArray(error.errors) &&
+        error.errors.some((connectionError) => connectionError.code === 'ECONNREFUSED'))
+    ) {
+      console.error(
+        'PostgreSQL is not accepting connections. Start Docker Desktop, then run "docker compose up -d postgres" from the repository root. For Node running on Windows, backend/.env must use localhost:5432 in DATABASE_URL.'
+      );
+    }
     console.error('Failed to start HackHunt backend:', error);
     process.exitCode = 1;
   });

@@ -43,6 +43,7 @@ The service-baseline action uses the existing coordinator workflow from the [pro
 - View official links, eligibility requirements, deadlines, and last-checked dates.
 - Identify opportunities closing soon or containing stale information.
 - Open official opportunity links.
+- Create a student account and sign in securely.
 
 ### Coordinator Features
 - Log in to manage opportunities.
@@ -52,6 +53,7 @@ The service-baseline action uses the existing coordinator workflow from the [pro
 
 ### Data and DevOps
 - Store opportunity records and coordinator re-check history persistently in PostgreSQL so they survive app restarts.
+- Store student accounts in PostgreSQL with bcrypt-hashed passwords.
 - Build and run the existing application with Docker Compose.
 - Automate testing and builds using GitHub Actions.
 - Deploy the application using Render.
@@ -94,7 +96,25 @@ The app also applies this idempotent migration automatically at startup. Postgre
 docker compose exec app npm run seed
 ```
 
-The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `DATABASE_URL` in `backend/.env`; PostgreSQL must already be running.
+The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `DATABASE_URL` in `backend/.env` with `localhost` as the database host; PostgreSQL must already be running. Start the database from the repository root with `docker compose up -d postgres`. Docker Desktop must be running, and the root `.env` must be configured as described above. The Compose service hostname `postgres` is only for connections from containers, not from Node running directly on Windows.
+
+### Student accounts
+
+The app applies the users-table migration automatically at startup. Student signup stores a bcrypt hash in PostgreSQL, rejects duplicate email addresses, and redirects to student sign-in after registration. Sign-in sets an HTTP-only `studentToken` cookie. Student auth uses the existing `COORDINATOR_JWT_SECRET`; no additional secret is required.
+
+```http
+POST /api/signup
+Content-Type: application/json
+
+{"fullName":"Ada Lovelace","email":"ada@example.com","password":"choose-a-password"}
+```
+
+```http
+POST /api/student/login
+Content-Type: application/json
+
+{"email":"ada@example.com","password":"choose-a-password"}
+```
 
 ### Coordinator re-check API
 
@@ -172,4 +192,4 @@ The project board tracks development tasks, team responsibilities, testing, depl
 
 ## 9. Scope and Limitations
 
-HackHunt focuses on manually curated hackathon opportunities. Automated scraping, personalized AI recommendations, student accounts, email or SMS alerts, in-app registration, and a separate mobile application are outside the scope of this sprint.
+HackHunt focuses on manually curated hackathon opportunities. Automated scraping, personalized AI recommendations, email or SMS alerts, in-app registration for listed opportunities, and a separate mobile application are outside the scope of this sprint.

@@ -12,6 +12,7 @@ jest.mock('../db/recheckStore', () => {
 
 const { PersistenceError, recheckOpportunity } = require('../db/recheckStore');
 const { create, findById } = require('../db/opportunityStore');
+const { findUserByEmail } = require('../db/userStore');
 const app = require('../app');
 const { startOfToday } = require('../utils/dates');
 const { connectToDatabase, clearDatabase, disconnectFromDatabase } = require('./database');
@@ -68,6 +69,72 @@ describe('coordinator authentication and admin opportunities API', () => {
         process.env.NODE_ENV = previousNodeEnv;
       }
     }
+  });
+
+  test('registers a student, normalizes email, and stores only a bcrypt hash', async () => {
+    const response = await request(app)
+      .post('/api/signup')
+      .send({ fullName: '  Ada Lovelace  ', email: 'ADA@example.com', password: 'secure-pass-123' });
+
+    expect(response.status).toBe(201);
+    expect(response.body.user).toMatchObject({
+      fullName: 'Ada Lovelace',
+      email: 'ada@example.com',
+    });
+    expect(JSON.stringify(response.body)).not.toContain('password');
+
+    const storedUser = await findUserByEmail('ada@example.com');
+    expect(storedUser.password_hash).not.toBe('secure-pass-123');
+    await expect(bcrypt.compare('secure-pass-123', storedUser.password_hash)).resolves.toBe(true);
+
+    const duplicate = await request(app)
+      .post('/api/signup')
+      .send({ fullName: 'Another Name', email: 'ada@example.com', password: 'secure-pass-123' });
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body.error.message).toMatch(/already exists/);
+  });
+
+  test('validates student signup payloads and signs students in with an httpOnly cookie', async () => {
+    const invalidPayloads = [
+      [],
+      {},
+      { fullName: 'Ada', email: 'not-an-email', password: 'secure-pass-123' },
+      { fullName: 'Ada', email: 'ada@example.com', password: 'short' },
+      { fullName: 'Ada', email: 'ada@example.com', password: 'x'.repeat(73) },
+      { fullName: 'Ada', email: 'ada@example.com', password: 'secure-pass-123', role: 'admin' },
+    ];
+
+    for (const payload of invalidPayloads) {
+      const invalid = await request(app).post('/api/signup').send(payload);
+      expect(invalid.status).toBe(400);
+    }
+
+    await request(app)
+      .post('/api/signup')
+      .send({ fullName: 'Ada Lovelace', email: 'ada@example.com', password: 'secure-pass-123' })
+      .expect(201);
+
+    const login = await request(app)
+      .post('/api/student/login')
+      .send({ email: 'ADA@example.com', password: 'secure-pass-123' });
+    expect(login.status).toBe(200);
+    expect(login.body.user.email).toBe('ada@example.com');
+    expect(login.headers['set-cookie'][0]).toMatch(/studentToken=/);
+    expect(login.headers['set-cookie'][0]).toMatch(/HttpOnly/i);
+    expect(login.headers['set-cookie'][0]).toMatch(/SameSite=Strict/i);
+
+    const studentCookie = login.headers['set-cookie'][0]
+      .replace(/^studentToken=/, 'coordinatorToken=')
+      .split(';')[0];
+    const deniedAdminAccess = await request(app)
+      .get('/api/admin/opportunities')
+      .set('Cookie', studentCookie);
+    expect(deniedAdminAccess.status).toBe(401);
+
+    const wrongPassword = await request(app)
+      .post('/api/student/login')
+      .send({ email: 'ada@example.com', password: 'wrong-password' });
+    expect(wrongPassword.status).toBe(401);
   });
 
   test('rejects invalid credentials and protects admin routes from missing or invalid cookies', async () => {

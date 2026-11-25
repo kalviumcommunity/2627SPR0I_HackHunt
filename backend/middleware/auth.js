@@ -9,7 +9,13 @@ function requireCoordinator(req, res, next) {
   }
 
   try {
-    jwt.verify(token, process.env.COORDINATOR_JWT_SECRET, { algorithms: ['HS256'] });
+    const payload = jwt.verify(token, process.env.COORDINATOR_JWT_SECRET, { algorithms: ['HS256'] });
+    if (
+      payload.role !== 'coordinator'
+      && !(payload.role === undefined && payload.username === process.env.COORDINATOR_USERNAME)
+    ) {
+      return res.status(401).json({ error: { message: 'Authentication required' } });
+    }
     return next();
   } catch {
     return res.status(401).json({ error: { message: 'Authentication required' } });

@@ -1,5 +1,5 @@
 const request = require('supertest');
-const Opportunity = require('../models/Opportunity');
+const { create } = require('../db/opportunityStore');
 const app = require('../app');
 const { startOfToday } = require('../utils/dates');
 const { connectToDatabase, clearDatabase, disconnectFromDatabase } = require('./database');
@@ -26,11 +26,9 @@ describe('public opportunities API', () => {
   beforeEach(clearDatabase);
 
   test('excludes expired listings and sorts current listings by nearest deadline', async () => {
-    await Opportunity.create([
-      opportunityData({ title: 'Later', deadline: new Date(startOfToday().getTime() + 5 * DAY_IN_MS) }),
-      opportunityData({ title: 'Expired', deadline: new Date(startOfToday().getTime() - DAY_IN_MS) }),
-      opportunityData({ title: 'Soon', deadline: new Date(startOfToday().getTime() + DAY_IN_MS) }),
-    ]);
+    await create(opportunityData({ title: 'Later', deadline: new Date(startOfToday().getTime() + 5 * DAY_IN_MS) }));
+    await create(opportunityData({ title: 'Expired', deadline: new Date(startOfToday().getTime() - DAY_IN_MS) }));
+    await create(opportunityData({ title: 'Soon', deadline: new Date(startOfToday().getTime() + DAY_IN_MS) }));
 
     const response = await request(app).get('/api/opportunities');
 
@@ -40,11 +38,9 @@ describe('public opportunities API', () => {
   });
 
   test('filters listings by mode', async () => {
-    await Opportunity.create([
-      opportunityData({ title: 'Online', mode: 'online' }),
-      opportunityData({ title: 'Offline', mode: 'offline' }),
-      opportunityData({ title: 'Hybrid', mode: 'hybrid' }),
-    ]);
+    await create(opportunityData({ title: 'Online', mode: 'online' }));
+    await create(opportunityData({ title: 'Offline', mode: 'offline' }));
+    await create(opportunityData({ title: 'Hybrid', mode: 'hybrid' }));
 
     const response = await request(app)
       .get('/api/opportunities')
@@ -55,7 +51,7 @@ describe('public opportunities API', () => {
   });
 
   test('applies validated filters and searches safely across public text fields', async () => {
-    await Opportunity.create(opportunityData({
+    await create(opportunityData({
       title: 'A+B Workshop',
       deadline: new Date(startOfToday().getTime() + 4 * DAY_IN_MS),
     }));
@@ -98,7 +94,7 @@ describe('public opportunities API', () => {
     const invalid = await request(app).get('/api/opportunities/not-an-id');
     expect(invalid.status).toBe(400);
 
-    const record = await Opportunity.create(opportunityData({
+    const record = await create(opportunityData({
       deadline: new Date(startOfToday().getTime() + DAY_IN_MS),
     }));
     const response = await request(app).get(`/api/opportunities/${record._id}`);

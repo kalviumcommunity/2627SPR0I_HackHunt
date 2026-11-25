@@ -1,24 +1,17 @@
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
-
 require('dotenv').config();
 
-const mongoose = require('mongoose');
 const app = require('./app');
 const { migrate } = require('./db/migrate');
 const { closePool } = require('./db/pool');
 
 async function start() {
-  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-  if (!mongoUri) {
-    throw new Error('MONGODB_URI or MONGO_URI must be set');
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL must be set');
   }
 
-  await mongoose.connect(mongoUri);
   try {
     await migrate();
   } catch (error) {
-    await mongoose.disconnect();
     await closePool();
     throw error;
   }
@@ -31,6 +24,15 @@ async function start() {
 
 if (require.main === module) {
   start().catch((error) => {
+    if (
+      error.code === 'ECONNREFUSED' ||
+      (Array.isArray(error.errors) &&
+        error.errors.some((connectionError) => connectionError.code === 'ECONNREFUSED'))
+    ) {
+      console.error(
+        'PostgreSQL is not accepting connections. Start Docker Desktop, then run "docker compose up -d postgres" from the repository root. For Node running on Windows, backend/.env must use localhost:5432 in DATABASE_URL.'
+      );
+    }
     console.error('Failed to start HackHunt backend:', error);
     process.exitCode = 1;
   });

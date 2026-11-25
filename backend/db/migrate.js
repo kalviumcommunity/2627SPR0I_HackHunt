@@ -2,10 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const { getPool, closePool } = require('./pool');
 
+const migrationsDirectory = path.join(__dirname, 'migrations');
+
 async function migrate() {
-  const migrationPath = path.join(__dirname, 'migrations', '001_create_opportunity_rechecks.sql');
-  const migration = fs.readFileSync(migrationPath, 'utf8');
-  await getPool().query(migration);
+  const migrationFiles = fs
+    .readdirSync(migrationsDirectory)
+    .filter((file) => file.endsWith('.sql'))
+    .sort();
+
+  for (const file of migrationFiles) {
+    const migration = fs.readFileSync(path.join(migrationsDirectory, file), 'utf8');
+    await getPool().query(migration);
+  }
 }
 
 if (require.main === module) {

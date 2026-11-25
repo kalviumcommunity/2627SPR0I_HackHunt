@@ -27,3 +27,40 @@ jobs:
 
       - name: Lint frontend
         run: npm run lint --prefix frontend
+
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: hackhunt_test
+          POSTGRES_USER: hackhunt
+          POSTGRES_PASSWORD: hackhunt
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hackhunt -d hackhunt_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://hackhunt:hackhunt@127.0.0.1:5432/hackhunt_test
+      TEST_DATABASE_URL: postgresql://hackhunt:hackhunt@127.0.0.1:5432/hackhunt_test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Apply database migrations
+        run: npm run db:migrate --prefix backend
+
+      - name: Run backend tests against PostgreSQL
+        run: npm test --prefix backend

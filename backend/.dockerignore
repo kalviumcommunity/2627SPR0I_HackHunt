@@ -6,3 +6,8 @@ npm-debug.log
 .git
 coverage
 backups
+tests
+*.test.js
+*.md
+.env.example
+.gitignore

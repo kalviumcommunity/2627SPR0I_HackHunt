@@ -1,6 +1,6 @@
 # Base image is pinned to an exact Node and Alpine version; never use latest.
 # See docs/dependency-pinning.md for upgrade steps.
-FROM node:20.20.2-alpine3.23
+FROM node:20.20.2-alpine3.23 AS runtime
 
 WORKDIR /app
 

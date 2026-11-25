@@ -24,6 +24,7 @@ async function connectToDatabase() {
 }
 
 async function clearDatabase() {
+  await getPool().query('DELETE FROM users');
   await getPool().query('DELETE FROM opportunity_rechecks');
   await getPool().query('DELETE FROM opportunities');
 }

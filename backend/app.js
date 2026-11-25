@@ -40,6 +40,13 @@ app.use((err, req, res, next) => {
   }
 
   console.error(err);
+  if (
+    ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EHOSTUNREACH'].includes(err.code)
+    || (typeof err.code === 'string' && (err.code.startsWith('08') || err.code.startsWith('53')))
+    || err.code === '57P01'
+  ) {
+    return res.status(503).json({ error: { message: 'Database is temporarily unavailable' } });
+  }
   return res.status(500).json({ error: { message: 'Internal server error' } });
 });
 

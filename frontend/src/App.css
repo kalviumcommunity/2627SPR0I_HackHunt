@@ -417,6 +417,79 @@ main {
   border-color: var(--accent);
 }
 
+.signup-card {
+  width: min(460px, 100%);
+}
+
+.signup-card form {
+  gap: 7px;
+}
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  padding-right: 58px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  padding: 5px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.field-error,
+.field-hint {
+  margin: -2px 0 4px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.field-error {
+  color: #a83333;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+.auth-success {
+  margin: 18px 0 0;
+  padding: 11px 12px;
+  border: 1px solid #d5e8dc;
+  border-radius: 8px;
+  background: #f1faf4;
+  color: #286440;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .login-submit {
   width: 100%;
   margin-top: 12px;
@@ -426,6 +499,21 @@ main {
 .login-submit:disabled {
   opacity: 0.7;
   cursor: wait;
+}
+
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgb(255 255 255 / 45%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-error {
@@ -736,15 +824,21 @@ main {
   }
 
   .site-header {
-    height: 66px;
+    height: auto;
+    min-height: 66px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
   }
 
   .site-header nav {
-    gap: 16px;
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
   }
 
   .site-header nav a {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .page-intro {

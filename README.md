@@ -1,4 +1,3 @@
-
 # HackHunt – Find the Right Hackathon Before the Deadline
 
 ## Getting Started
@@ -61,7 +60,8 @@ The service-baseline action uses the existing coordinator workflow from the [pro
 ## Run locally with Docker Compose
 
 ### Prerequisites
-- Docker Desktop with its engine running
+
+- Docker Desktop with its engine running.
 
 ### Configure
 
@@ -83,20 +83,70 @@ Copy the printed hash into `COORDINATOR_PASSWORD_HASH` in the root `.env`, keepi
 
 ### Install, migrate, and start
 
-The Docker build installs backend dependencies. Start the app and its PostgreSQL database:
+The Docker Compose configuration starts both services:
+
+- **app:** The HackHunt Node.js API, available on port `5000` by default.
+- **postgres:** The PostgreSQL database.
+
+Compose reads configuration values, including `PORT`, `DATABASE_URL`, and PostgreSQL credentials, from the root `.env` file. The API connects to PostgreSQL using the Compose service hostname `postgres`.
+
+Database records are persisted in the `postgres_data` named volume, so they remain available even after containers are stopped or recreated.
+
+From the repository root, run:
 
 ```powershell
 docker compose up -d --build
+```
+
+This single command builds and starts both the API and PostgreSQL services.
+
+To apply database migrations:
+
+```powershell
 docker compose exec app npm run db:migrate
 ```
 
-The app also applies this idempotent migration automatically at startup. PostgreSQL data is stored in the `postgres_data` named volume. To seed the opportunity board:
+The app also applies this idempotent migration automatically at startup.
+
+To seed the opportunity board:
 
 ```powershell
 docker compose exec app npm run seed
 ```
 
-The API listens on port 5000. To install backend dependencies outside Docker, run `npm ci --prefix backend`. For that mode, configure `DATABASE_URL` in `backend/.env` with `localhost` as the database host; PostgreSQL must already be running. Start the database from the repository root with `docker compose up -d postgres`. Docker Desktop must be running, and the root `.env` must be configured as described above. The Compose service hostname `postgres` is only for connections from containers, not from Node running directly on Windows.
+The API health endpoint is available at:
+
+```text
+http://localhost:5000/health
+```
+
+The opportunities endpoint is available at:
+
+```text
+http://localhost:5000/api/opportunities
+```
+
+To install backend dependencies outside Docker, run:
+
+```powershell
+npm ci --prefix backend
+```
+
+For that mode, configure `DATABASE_URL` in `backend/.env` with `localhost` as the database host; PostgreSQL must already be running. Start the database from the repository root with:
+
+```powershell
+docker compose up -d postgres
+```
+
+Docker Desktop must be running, and the root `.env` must be configured as described above. The Compose service hostname `postgres` is only for connections from containers, not from Node running directly on Windows.
+
+To stop the containers without deleting persistent database records, run:
+
+```powershell
+docker compose down
+```
+
+Do not add `-v` if you want to preserve the `postgres_data` volume.
 
 ### Student accounts
 
@@ -140,16 +190,16 @@ Example successful response:
 
 ```json
 {
- "_id": "0123456789abcdef01234567",
- "title": "Student Hackathon",
- "organizer": "Example University",
- "officialUrl": "https://example.edu/hackathon",
- "type": "hackathon",
- "mode": "online",
- "eligibilityNotes": "Open to all students",
- "deadline": "2027-01-01T00:00:00.000Z",
- "lastChecked": "2026-11-18T00:00:00.000Z",
- "status": "active"
+  "_id": "0123456789abcdef01234567",
+  "title": "Student Hackathon",
+  "organizer": "Example University",
+  "officialUrl": "https://example.edu/hackathon",
+  "type": "hackathon",
+  "mode": "online",
+  "eligibilityNotes": "Open to all students",
+  "deadline": "2027-01-01T00:00:00.000Z",
+  "lastChecked": "2026-11-18T00:00:00.000Z",
+  "status": "active"
 }
 ```
 
@@ -172,13 +222,16 @@ To confirm PostgreSQL history, run:
 docker compose exec postgres psql -U hackhunt -d hackhunt -c "SELECT opportunity_id, last_checked, rechecked_at FROM opportunity_rechecks ORDER BY id DESC LIMIT 5;"
 ```
 
-To verify data survives an app restart, run `docker compose restart app`, then repeat the API request or SQL query. To stop the containers without deleting persistent records, run `docker compose down` (do not add `-v`).
+To verify data survives an app restart, run `docker compose restart app`, then repeat the API request or SQL query.
+
+To stop the containers without deleting persistent records, run `docker compose down` (do not add `-v`).
 
 ## 7. Demo Link
 
 **Live Demo:** [Deployed URL]
 
 The demo should demonstrate:
+
 1. A student searching and filtering current opportunities.
 2. A coordinator logging in and adding an opportunity.
 3. The new listing appearing on the student board.
